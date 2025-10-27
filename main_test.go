@@ -1,56 +1,54 @@
 package main
 
 import (
+	"errors"
 	"os"
 	"os/exec"
-	"os/signal"
 	"testing"
-
-	"github.com/stretchr/testify/assert"
 )
 
 func TestMain(t *testing.T) {
 	t.Run("help", func(t *testing.T) {
-		proc, err := os.FindProcess(os.Getpid())
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		sigc := make(chan os.Signal, 1)
-		signal.Notify(sigc, os.Interrupt)
-
-		go func() {
-			<-sigc
-			os.Args = []string{
-				"-h",
-			}
-			main()
-			signal.Stop(sigc)
-		}()
-
-		err = proc.Signal(os.Interrupt)
-		if err != nil {
-			t.Fatal(err)
-		}
-	})
-}
-
-func TestMain_fatal(t *testing.T) {
-	assert := assert.New(t)
-	if os.Getenv("FATAL") == "1" {
 		os.Args = []string{
-			"agent",
-			"dev",
-			"--fail",
+			"scalezilla",
+			"--help",
 		}
 		main()
-		return
-	}
-	cmd := exec.Command(os.Args[0], "agent", "-test.run=TestMain_fatal")
-	cmd.Env = append(os.Environ(), "FATAL=1")
-	err := cmd.Run()
-	if e, ok := err.(*exec.ExitError); ok && !e.Success() {
-		return
-	}
-	assert.Error(err)
+	})
+
+	t.Run("fatal", func(t *testing.T) {
+		if os.Getenv("FATAL_AGENT_DEV") == "1" {
+			os.Args = []string{
+				"scalezilla",
+				"agent",
+				"dev",
+				"--fail",
+			}
+			main()
+			return
+		}
+
+		bin, err := os.Executable()
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		cmd := exec.Command(bin, "-test.run=TestMain/fatal")
+		cmd.Env = append(os.Environ(), "FATAL_AGENT_DEV=1")
+		err = cmd.Run()
+		if err == nil {
+			t.Fatal("expected non-nil error from fatal exit")
+		}
+
+		var exitErr *exec.ExitError
+		if errors.As(err, &exitErr) {
+			if exitErr.ExitCode() != 1 {
+				t.Fatalf("expected exit code 1, got %d", exitErr.ExitCode())
+			}
+			// success
+			return
+		}
+
+		t.Fatalf("unexpected error type: %T, %v", err, err)
+	})
 }

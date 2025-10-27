@@ -26,5 +26,7 @@ func main() {
 
 	if err := cmd.Run(context.Background(), os.Args); err != nil {
 		logger.NewLogger().Fatal().Err(err).Msg("Error occured while executing the program")
+		// MUST keep os.Exit otherwise testing fatal won't work
+		os.Exit(1)
 	}
 }

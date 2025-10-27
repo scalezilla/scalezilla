@@ -1,7 +1,5 @@
 package cluster
 
-import "fmt"
-
 // NewCluster build the requirements to start the cluster
 func NewCluster(config ClusterInitialConfig) *Cluster {
 	c := &Cluster{
@@ -16,22 +14,24 @@ func NewCluster(config ClusterInitialConfig) *Cluster {
 		members:       config.Members,
 	}
 
+	c.newRaftyFunc = c.newRafty
 	c.startRaftyFunc = c.startRafty
 	c.startAPIServerFunc = c.startAPIServer
 	c.stopAPIServerFunc = c.stopAPIServer
 	c.stopRaftyFunc = c.stopRafty
 	c.raftyStoreCloseFunc = c.raftyStoreClose
+
+	c.buildDataDir()
+	c.buildSignal()
 	return c
 }
 
 // Start will start the cluster
 func (c *Cluster) Start() error {
 	c.buildAddressAndID()
-	c.buildDataDir()
-	c.buildSignal()
 
 	var err error
-	if c.rafty, err = c.newRafty(scalezillaAppName); err != nil {
+	if c.rafty, err = c.newRaftyFunc(scalezillaAppName); err != nil {
 		return err
 	}
 	c.newAPIServer()
@@ -46,8 +46,6 @@ func (c *Cluster) Start() error {
 	c.logger.Info().Msg("server started successfully")
 
 	<-c.quit
-
-	fmt.Println("FUCK")
 
 	if err := c.stopAPIServerFunc(); err != nil {
 		return err

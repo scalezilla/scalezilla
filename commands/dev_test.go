@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/signal"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -33,6 +34,9 @@ func TestCommandsDev(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
+		// SLEEP MUST BE KEPT to avoid data race during tests
+		// it's only required with proc, err := os.FindProcess(os.Getpid())
+		time.Sleep(100 * time.Millisecond)
 	})
 
 	t.Run("fail", func(t *testing.T) {
