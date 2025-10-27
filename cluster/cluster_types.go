@@ -5,6 +5,7 @@ import (
 	"net"
 	"os"
 
+	"github.com/Lord-Y/rafty"
 	"github.com/rs/zerolog"
 )
 
@@ -92,8 +93,8 @@ type Cluster struct {
 	// apiServer holds the config of the HTTP API server
 	apiServer httpServer
 
-	// newRafty is used as a dependency injection
-	// newRaftyFunc func() error
+	// newRaftyFunc is used as a dependency injection
+	newRaftyFunc func(string) (*rafty.Rafty, error)
 
 	// startRaftyFunc is used as a dependency injection
 	startRaftyFunc func() error

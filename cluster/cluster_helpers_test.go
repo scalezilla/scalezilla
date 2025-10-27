@@ -26,8 +26,6 @@ func makeBasicCluster(randomPort bool) *Cluster {
 	}
 	z := NewCluster(config)
 	z.buildAddressAndID()
-	z.buildDataDir()
-	z.buildSignal()
 
 	return z
 }
