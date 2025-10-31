@@ -1,17 +1,12 @@
 package cluster
 
 // NewCluster build the requirements to start the cluster
-func NewCluster(config ClusterInitialConfig) *Cluster {
+func NewCluster(config ClusterInitialConfig) (*Cluster, error) {
 	c := &Cluster{
-		logger:        config.Logger,
-		configPath:    config.ConfigPath,
-		dev:           config.Dev,
-		bindAddress:   config.BindAddress,
-		hostIPAddress: config.HostIPAddress,
-		httpPort:      config.HTTPPort,
-		raftGRPCPort:  config.GRPCPort,
-		grpcPort:      config.GRPCPort,
-		members:       config.Members,
+		logger:     config.Logger,
+		configFile: config.ConfigFile,
+		ctx:        config.Context,
+		test:       config.Test,
 	}
 
 	c.newRaftyFunc = c.newRafty
@@ -20,10 +15,19 @@ func NewCluster(config ClusterInitialConfig) *Cluster {
 	c.stopAPIServerFunc = c.stopAPIServer
 	c.stopRaftyFunc = c.stopRafty
 	c.raftyStoreCloseFunc = c.raftyStoreClose
+	c.raftMetricPrefix = scalezillaAppName
 
 	c.buildDataDir()
-	c.buildSignal()
-	return c
+	if config.Dev {
+		c.buildDevConfig(config)
+		return c, nil
+	}
+
+	if err := c.parseConfig(); err != nil {
+		return nil, err
+	}
+
+	return c, nil
 }
 
 // Start will start the cluster
@@ -31,7 +35,7 @@ func (c *Cluster) Start() error {
 	c.buildAddressAndID()
 
 	var err error
-	if c.rafty, err = c.newRaftyFunc(scalezillaAppName); err != nil {
+	if c.rafty, err = c.newRaftyFunc(); err != nil {
 		return err
 	}
 	c.newAPIServer()
@@ -45,7 +49,7 @@ func (c *Cluster) Start() error {
 	}
 	c.logger.Info().Msg("server started successfully")
 
-	<-c.quit
+	<-c.ctx.Done()
 
 	if err := c.stopAPIServerFunc(); err != nil {
 		return err

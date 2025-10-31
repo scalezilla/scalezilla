@@ -16,20 +16,22 @@ func TestFSM(t *testing.T) {
 	assert := assert.New(t)
 
 	t.Run("new_snapshot", func(t *testing.T) {
-		cluster := makeBasicCluster(false)
+		cfg := basicClusterConfig{randomPort: false, dev: true}
+		cluster := makeBasicCluster(cfg)
 		defer func() {
-			_ = os.RemoveAll(cluster.dataDir)
+			_ = os.RemoveAll(cluster.config.DataDir)
 		}()
 
-		snapshot := newSnapshot(cluster.dataDir, 3)
+		snapshot := newSnapshot(cluster.config.DataDir, 3)
 		assert.Nil(snapshot.List())
 	})
 
 	t.Run("snapshot_rafty_marshal_binary_error", func(t *testing.T) {
-		cluster := makeBasicCluster(false)
+		cfg := basicClusterConfig{randomPort: false, dev: true}
+		cluster := makeBasicCluster(cfg)
 		store, err := cluster.buildStore()
 		defer func() {
-			_ = os.RemoveAll(cluster.dataDir)
+			_ = os.RemoveAll(cluster.config.DataDir)
 		}()
 		assert.Nil(err)
 
@@ -48,10 +50,11 @@ func TestFSM(t *testing.T) {
 	})
 
 	t.Run("snapshot_rafty_marshal_binary_error", func(t *testing.T) {
-		cluster := makeBasicCluster(false)
+		cfg := basicClusterConfig{randomPort: false, dev: true}
+		cluster := makeBasicCluster(cfg)
 		store, err := cluster.buildStore()
 		defer func() {
-			_ = os.RemoveAll(cluster.dataDir)
+			_ = os.RemoveAll(cluster.config.DataDir)
 		}()
 		assert.Nil(err)
 
@@ -73,10 +76,11 @@ func TestFSM(t *testing.T) {
 	})
 
 	t.Run("snapshot_writer_error", func(t *testing.T) {
-		cluster := makeBasicCluster(false)
+		cfg := basicClusterConfig{randomPort: false, dev: true}
+		cluster := makeBasicCluster(cfg)
 		store, err := cluster.buildStore()
 		defer func() {
-			_ = os.RemoveAll(cluster.dataDir)
+			_ = os.RemoveAll(cluster.config.DataDir)
 		}()
 		assert.Nil(err)
 
@@ -98,10 +102,11 @@ func TestFSM(t *testing.T) {
 	})
 
 	t.Run("snapshot_success", func(t *testing.T) {
-		cluster := makeBasicCluster(false)
+		cfg := basicClusterConfig{randomPort: false, dev: true}
+		cluster := makeBasicCluster(cfg)
 		store, err := cluster.buildStore()
 		defer func() {
-			_ = os.RemoveAll(cluster.dataDir)
+			_ = os.RemoveAll(cluster.config.DataDir)
 		}()
 		assert.Nil(err)
 
@@ -116,10 +121,11 @@ func TestFSM(t *testing.T) {
 	})
 
 	t.Run("apply_command_error", func(t *testing.T) {
-		cluster := makeBasicCluster(false)
+		cfg := basicClusterConfig{randomPort: false, dev: true}
+		cluster := makeBasicCluster(cfg)
 		store, err := cluster.buildStore()
 		defer func() {
-			_ = os.RemoveAll(cluster.dataDir)
+			_ = os.RemoveAll(cluster.config.DataDir)
 		}()
 		assert.Nil(err)
 
@@ -136,10 +142,11 @@ func TestFSM(t *testing.T) {
 	})
 
 	t.Run("apply_command_success", func(t *testing.T) {
-		cluster := makeBasicCluster(false)
+		cfg := basicClusterConfig{randomPort: false, dev: true}
+		cluster := makeBasicCluster(cfg)
 		store, err := cluster.buildStore()
 		defer func() {
-			_ = os.RemoveAll(cluster.dataDir)
+			_ = os.RemoveAll(cluster.config.DataDir)
 		}()
 		assert.Nil(err)
 
@@ -153,10 +160,11 @@ func TestFSM(t *testing.T) {
 	})
 
 	t.Run("apply_command_nil", func(t *testing.T) {
-		cluster := makeBasicCluster(false)
+		cfg := basicClusterConfig{randomPort: false, dev: true}
+		cluster := makeBasicCluster(cfg)
 		store, err := cluster.buildStore()
 		defer func() {
-			_ = os.RemoveAll(cluster.dataDir)
+			_ = os.RemoveAll(cluster.config.DataDir)
 		}()
 		assert.Nil(err)
 
@@ -171,10 +179,11 @@ func TestFSM(t *testing.T) {
 	})
 
 	t.Run("restore_eof_error", func(t *testing.T) {
-		cluster := makeBasicCluster(false)
+		cfg := basicClusterConfig{randomPort: false, dev: true}
+		cluster := makeBasicCluster(cfg)
 		store, err := cluster.buildStore()
 		defer func() {
-			_ = os.RemoveAll(cluster.dataDir)
+			_ = os.RemoveAll(cluster.config.DataDir)
 		}()
 		assert.Nil(err)
 
@@ -184,10 +193,11 @@ func TestFSM(t *testing.T) {
 	})
 
 	t.Run("restore_io_readfull_error", func(t *testing.T) {
-		cluster := makeBasicCluster(false)
+		cfg := basicClusterConfig{randomPort: false, dev: true}
+		cluster := makeBasicCluster(cfg)
 		store, err := cluster.buildStore()
 		defer func() {
-			_ = os.RemoveAll(cluster.dataDir)
+			_ = os.RemoveAll(cluster.config.DataDir)
 		}()
 		assert.Nil(err)
 
@@ -201,10 +211,11 @@ func TestFSM(t *testing.T) {
 	})
 
 	t.Run("restore_unmarshal_error", func(t *testing.T) {
-		cluster := makeBasicCluster(false)
+		cfg := basicClusterConfig{randomPort: false, dev: true}
+		cluster := makeBasicCluster(cfg)
 		store, err := cluster.buildStore()
 		defer func() {
-			_ = os.RemoveAll(cluster.dataDir)
+			_ = os.RemoveAll(cluster.config.DataDir)
 		}()
 		assert.Nil(err)
 
@@ -224,10 +235,11 @@ func TestFSM(t *testing.T) {
 	})
 
 	t.Run("restore_apply_func_error", func(t *testing.T) {
-		cluster := makeBasicCluster(false)
+		cfg := basicClusterConfig{randomPort: false, dev: true}
+		cluster := makeBasicCluster(cfg)
 		store, err := cluster.buildStore()
 		defer func() {
-			_ = os.RemoveAll(cluster.dataDir)
+			_ = os.RemoveAll(cluster.config.DataDir)
 		}()
 		assert.Nil(err)
 
@@ -250,10 +262,11 @@ func TestFSM(t *testing.T) {
 	})
 
 	t.Run("restore_success", func(t *testing.T) {
-		cluster := makeBasicCluster(false)
+		cfg := basicClusterConfig{randomPort: false, dev: true}
+		cluster := makeBasicCluster(cfg)
 		store, err := cluster.buildStore()
 		defer func() {
-			_ = os.RemoveAll(cluster.dataDir)
+			_ = os.RemoveAll(cluster.config.DataDir)
 		}()
 		assert.Nil(err)
 

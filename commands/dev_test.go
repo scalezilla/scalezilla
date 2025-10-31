@@ -2,8 +2,6 @@ package commands
 
 import (
 	"context"
-	"os"
-	"os/signal"
 	"testing"
 	"time"
 
@@ -13,30 +11,24 @@ import (
 func TestCommandsDev(t *testing.T) {
 	assert := assert.New(t)
 
-	t.Run("server_success", func(t *testing.T) {
-		proc, err := os.FindProcess(os.Getpid())
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		sigc := make(chan os.Signal, 1)
-		signal.Notify(sigc, os.Interrupt)
-
+	t.Run("success", func(t *testing.T) {
 		cmd := Dev()
+		ctx, cancel := context.WithCancel(context.Background())
 
+		done := make(chan error, 1)
 		go func() {
-			<-sigc
-			assert.Nil(cmd.Run(context.Background(), []string{}))
-			signal.Stop(sigc)
+			done <- cmd.Run(ctx, []string{"dev", "--test-raft-metric-prefix", "commands-dev-success"})
 		}()
 
-		err = proc.Signal(os.Interrupt)
-		if err != nil {
-			t.Fatal(err)
+		time.Sleep(time.Second)
+		cancel()
+
+		select {
+		case err := <-done:
+			assert.NoError(err)
+		case <-time.After(time.Second):
+			t.Fatal("timeout waiting for Run() to stop")
 		}
-		// SLEEP MUST BE KEPT to avoid data race during tests
-		// it's only required with proc, err := os.FindProcess(os.Getpid())
-		time.Sleep(100 * time.Millisecond)
 	})
 
 	t.Run("fail", func(t *testing.T) {

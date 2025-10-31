@@ -3,7 +3,7 @@ package cluster
 import (
 	"context"
 	"net"
-	"os"
+	"time"
 
 	"github.com/Lord-Y/rafty"
 	"github.com/rs/zerolog"
@@ -11,16 +11,36 @@ import (
 
 const scalezillaAppName string = "scalezilla"
 
+var (
+	defaultClusterName              string        = "default"
+	defaultDataDir                  string        = "/var/lib/scalezilla"
+	defaultBindAddress              string        = "127.0.0.1"
+	defaultHostIPAddress            string        = "127.0.0.1"
+	defaultHTTPPort                 uint16        = 15000
+	defaultRaftGRPCPort             uint16        = 15001
+	defaultGRPCPort                 uint16        = 15002
+	defaultSnapshotInterval         time.Duration = 5 * time.Minute
+	defaultSnapshotThreshold        uint64        = 128
+	defaultClusterJoinRetryInterval time.Duration = 15 * time.Second
+	defaultClusterJoinRetryMax      uint16        = 5
+	defaultMaxAppendEntries         uint64        = 1024
+)
+
 // ClusterInitialConfig is the configuration used by the cli
 // to start a new cluster
 type ClusterInitialConfig struct {
+	// Logger is the cluster logger
 	Logger *zerolog.Logger
 
-	// ConfigPath is the path of the config to start the cluster
-	ConfigPath string
+	// ConfigFile is the full path of the config to start the cluster
+	ConfigFile string
 
 	// Dev indicates if we need to start a development cluster
 	Dev bool
+
+	// Test indicates if we need to override some settings
+	// for unit testing
+	Test bool
 
 	// BindAddress is the address to use by the cluster
 	BindAddress string
@@ -39,32 +59,38 @@ type ClusterInitialConfig struct {
 
 	// Members are the rafty cluster members
 	Members []string
+
+	// ClusterName is the name of the current cluster
+	ClusterName string
+
+	// TestRaftMetricPrefix is only used during unit testing to override
+	// raft metric prefix
+	TestRaftMetricPrefix string
+
+	// Context is the context provided by the cli
+	// to start the cluster
+	Context context.Context
 }
 
 // Cluster holds all required configuration to start the instance
 type Cluster struct {
 	logger *zerolog.Logger
 
-	// configPath is the path of the config to start the cluster
-	configPath string
+	// configFile is the full path of the config to start the cluster
+	configFile string
+
+	// clusterName is the name of the current cluster
+	clusterName string
 
 	// dev indicates if we need to start a development cluster
 	dev bool
 
-	// BindAddress is the address to use by the cluster
-	bindAddress string
+	// test indicates if we need to override some settings
+	// for unit testing
+	test bool
 
-	// HostIPAddress is the ip address to use by the cluster
-	hostIPAddress string
-
-	// httpPort to use to handle http requests
-	httpPort uint16
-
-	// raftGRPCPort is the port for rafty cluster purpose
-	raftGRPCPort uint16
-
-	// grpcPort is the port for internal cluster purpose
-	grpcPort uint16
+	// isVoter statuates if the current node is a voting member node
+	isVoter bool
 
 	// Members are the rafty cluster members
 	members []string
@@ -75,11 +101,8 @@ type Cluster struct {
 	// id is the id of the current node
 	id string
 
-	// dataDir is the working directory of this node
-	dataDir string
-
-	// quit is the chan used to stop the cluster
-	quit chan os.Signal
+	// ctx is the context to use to stop the cluster
+	ctx context.Context
 
 	// fsm holds requirements to manipulate store
 	fsm *fsmState
@@ -94,7 +117,7 @@ type Cluster struct {
 	apiServer httpServer
 
 	// newRaftyFunc is used as a dependency injection
-	newRaftyFunc func(string) (*rafty.Rafty, error)
+	newRaftyFunc func() (*rafty.Rafty, error)
 
 	// startRaftyFunc is used as a dependency injection
 	startRaftyFunc func() error
@@ -110,6 +133,13 @@ type Cluster struct {
 
 	// raftyStoreCloseFunc is used as a dependency injection
 	raftyStoreCloseFunc func() error
+
+	// raftMetricPrefix is used to prefix rafty metrics
+	// with the provided value
+	raftMetricPrefix string
+
+	// config is the configuration to use to start the cluster
+	config Config
 }
 
 // httpServer is an interface implements http.Server requirements.
@@ -120,4 +150,110 @@ type httpServer interface {
 
 	// Shutdown will shutdown the server
 	Shutdown(ctx context.Context) error
+}
+
+// Config is the configuration to use to start
+// the cluster
+type Config struct {
+	// Hostname is the name of the current host
+	Hostname string `hcl:"cluster_name,optional"`
+
+	// ClusterName is the name of the current cluster
+	ClusterName string `hcl:"cluster_name,optional"`
+
+	// DataDir is where node data will be stored
+	DataDir string `hcl:"data_dir,optional"`
+
+	// BindAddress is the address to use by the cluster
+	BindAddress string `hcl:"bind_address,optional"`
+
+	// HostIPAddress is the ip address to use by the cluster
+	HostIPAddress string `hcl:"host_ip_address,optional"`
+
+	// HTTPPort to use to handle http requests
+	HTTPPort uint16 `hcl:"http_port,optional"`
+
+	// RaftGRPCPort is the port for rafty cluster purpose
+	RaftGRPCPort uint16 `hcl:"raft_grpc_port,optional"`
+
+	// GRPCPort is the port for internal cluster purpose
+	GRPCPort uint16 `hcl:"grpc_port,optional"`
+
+	// Server holds controle plane config
+	Server *Server `hcl:"server,block"`
+
+	// Client holds data plane config
+	Client *Client `hcl:"client,block"`
+}
+
+// Server holds the requirements to start current node
+// as a cluster
+type Server struct {
+	// Enabled when set to true indicates we are in server mode
+	Enabled bool `hcl:"enabled"`
+
+	// Raft holds config related to raft consensus protocol
+	Raft *RaftConfig `hcl:"raft,block"`
+
+	// ClusterJoin holds requirements to join the cluster
+	ClusterJoin *ClusterJoin `hcl:"cluster_join,block"`
+}
+
+// Server holds the requirements to start current node
+// as a cluster
+type Client struct {
+	// Enabled when set to true indicates we are in server mode
+	Enabled bool `hcl:"enabled"`
+
+	// Raft holds config related to raft consensus protocol
+	Raft *RaftConfig `hcl:"raft,block"`
+
+	// ClusterJoin holds requirements to join the cluster
+	ClusterJoin *ClusterJoin `hcl:"cluster_join,block"`
+}
+
+// RaftConfig holds the requirements to start the raft cluster
+type RaftConfig struct {
+	// // dataDir is where node data will be stored
+	// dataDir string `hcl:"data_dir,optional"`
+
+	// // logger expose zerolog config so it can be override
+	// logger *zerolog.Logger
+
+	// BootstrapExpectedSize is the number of node to wait for
+	// before bootstrapping the cluster
+	BootstrapExpectedSize uint64 `hcl:"bootstrap_expected_size"`
+
+	// TimeMultiplier is a scaling factor that will be used during election timeout and heartbeats checks.
+	// Default to 1 for server mode.
+	// Default to 2 for client mode.
+	// Max is 10.
+	TimeMultiplier uint `hcl:"time_multiplier,optional"`
+
+	// SnapshotInterval is the interval at which a snapshot will be taken. It will be randomize with this minimum value in order to prevent all nodes to take a snapshot at the same time.
+	// Default to 5 minutes
+	SnapshotInterval time.Duration `hcl:"snapshot_interval,optional"`
+
+	// SnapshotThreshold is the threshold that must be reached before taking a snapshot.
+	// It prevent to take snapshots to frequently.
+	// Default to 128
+	SnapshotThreshold uint64 `hcl:"snapshot_threshold,optional"`
+}
+
+// ClusterJoin holds requirements to join the cluster
+type ClusterJoin struct {
+	// InitialMembers is the list of members to contact
+	// to join the cluster.
+	// Format is [ "x.x.x.x", "y.y.y.y", "z.z.z.z:15002"]
+	// When port is not specified, it defaults to 15002
+	InitialMembers []string `hcl:"initial_members"`
+
+	// RetryMax is the maximum retry to contact initial members.
+	// Default to 5
+	RetryMax uint16 `hcl:"retry_max,optional"`
+
+	// RetryInterval is a timeout at which the current node will
+	// try to contact the initial members.
+	// Default to 15s
+	RetryInterval time.Duration `hcl:"retry_interval,optional"`
 }

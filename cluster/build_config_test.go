@@ -11,8 +11,10 @@ func TestBuildConfig(t *testing.T) {
 
 	t.Run("build_address_and_id", func(t *testing.T) {
 		cluster := &Cluster{
-			hostIPAddress: testHostIPAddress,
-			raftGRPCPort:  testRaftGRPCPort,
+			config: Config{
+				HostIPAddress: defaultHostIPAddress,
+				RaftGRPCPort:  defaultRaftGRPCPort,
+			},
 		}
 
 		cluster.buildAddressAndID()
@@ -22,8 +24,10 @@ func TestBuildConfig(t *testing.T) {
 
 	t.Run("build_peers", func(t *testing.T) {
 		cluster := &Cluster{
-			hostIPAddress: testHostIPAddress,
-			raftGRPCPort:  testRaftGRPCPort,
+			config: Config{
+				HostIPAddress: defaultHostIPAddress,
+				RaftGRPCPort:  defaultRaftGRPCPort,
+			},
 		}
 		cluster.members = append(cluster.members, "127.0.0.1:16000")
 
@@ -34,7 +38,7 @@ func TestBuildConfig(t *testing.T) {
 		cluster := &Cluster{}
 
 		cluster.buildDataDir()
-		assert.NotNil(cluster.dataDir)
+		assert.NotNil(cluster.config.DataDir)
 	})
 
 	t.Run("build_store", func(t *testing.T) {
@@ -44,5 +48,13 @@ func TestBuildConfig(t *testing.T) {
 		store, err := cluster.buildStore()
 		assert.Nil(err)
 		assert.Nil(store.Close())
+	})
+
+	t.Run("build_dev_config", func(t *testing.T) {
+		config := ClusterInitialConfig{Dev: true}
+
+		cluster, err := NewCluster(config)
+		assert.Nil(err)
+		assert.Equal(cluster.dev, true)
 	})
 }
