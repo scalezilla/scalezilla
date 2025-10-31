@@ -14,26 +14,42 @@ func TestRafty(t *testing.T) {
 	assert := assert.New(t)
 
 	t.Run("new_rafty_error", func(t *testing.T) {
-		cluster := makeBasicCluster(false)
+		cfg := basicClusterConfig{randomPort: false, dev: true}
+		cluster := makeBasicCluster(cfg)
 		defer func() {
-			_ = os.RemoveAll(cluster.dataDir)
+			_ = os.RemoveAll(cluster.config.DataDir)
 		}()
 
-		dir := filepath.Dir(cluster.dataDir)
+		dir := filepath.Dir(cluster.config.DataDir)
 		assert.Nil(os.MkdirAll(dir, 0750))
-		file, err := os.Create(cluster.dataDir)
+		file, err := os.Create(cluster.config.DataDir)
 		assert.Nil(err)
 		assert.Nil(file.Close())
-		_, err = cluster.newRafty("new_rafty_error")
+		cluster.raftMetricPrefix = "new_rafty_error"
+		_, err = cluster.newRafty()
 		assert.Error(err)
 	})
 
-	t.Run("new_rafty_success", func(t *testing.T) {
-		cluster := makeBasicCluster(false)
+	t.Run("new_rafty_success_voter", func(t *testing.T) {
+		cfg := basicClusterConfig{randomPort: false, dev: true}
+		cluster := makeBasicCluster(cfg)
 		defer func() {
-			_ = os.RemoveAll(cluster.dataDir)
+			_ = os.RemoveAll(cluster.config.DataDir)
 		}()
-		_, err := cluster.newRafty("new_rafty_success")
+		cluster.raftMetricPrefix = "new_rafty_success_voter"
+		_, err := cluster.newRafty()
+		assert.Nil(err)
+	})
+
+	t.Run("new_rafty_success_non_voter", func(t *testing.T) {
+		cfg := basicClusterConfig{randomPort: false, dev: true}
+		cluster := makeBasicCluster(cfg)
+		cluster.isVoter = false
+		defer func() {
+			_ = os.RemoveAll(cluster.config.DataDir)
+		}()
+		cluster.raftMetricPrefix = "new_rafty_success_non_voter"
+		_, err := cluster.newRafty()
 		assert.Nil(err)
 	})
 
@@ -60,13 +76,15 @@ func TestRafty(t *testing.T) {
 	})
 
 	t.Run("start_rafty_success", func(t *testing.T) {
-		cluster := makeBasicCluster(true)
+		cfg := basicClusterConfig{randomPort: true, dev: true}
+		cluster := makeBasicCluster(cfg)
 		defer func() {
-			_ = os.RemoveAll(cluster.dataDir)
+			_ = os.RemoveAll(cluster.config.DataDir)
 		}()
 
 		var err error
-		cluster.rafty, err = cluster.newRafty("start_rafty_success")
+		cluster.raftMetricPrefix = "start_rafty_success"
+		cluster.rafty, err = cluster.newRafty()
 		assert.Nil(err)
 
 		defer func() {

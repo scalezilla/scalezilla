@@ -12,7 +12,8 @@ func TestAPIServer(t *testing.T) {
 	assert := assert.New(t)
 
 	t.Run("start_success", func(t *testing.T) {
-		cluster := makeBasicCluster(true)
+		cfg := basicClusterConfig{randomPort: true, dev: true}
+		cluster := makeBasicCluster(cfg)
 		cluster.newAPIServer()
 
 		go func() {

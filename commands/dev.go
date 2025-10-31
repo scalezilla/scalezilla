@@ -60,14 +60,32 @@ func Dev() *cli.Command {
 				Hidden:      true,
 				Destination: &fail,
 			},
+			&cli.StringFlag{
+				Name:        "cluster-name",
+				Aliases:     []string{"c"},
+				Value:       "default",
+				Usage:       "Name of the cluster",
+				Destination: &app.ClusterName,
+			},
+			&cli.StringFlag{
+				Name:        "test-raft-metric-prefix",
+				Usage:       "override raft metric prefix during unit testing",
+				Hidden:      true,
+				Destination: &app.TestRaftMetricPrefix,
+			},
 		},
-		Action: func(context.Context, *cli.Command) error {
+		Action: func(ctx context.Context, _ *cli.Command) error {
 			if fail {
 				return errors.New("test failure")
 			}
 
+			sigCtx, stop := cluster.BuildSignal(ctx)
+			defer stop()
+
+			app.Context = sigCtx
+			app.Dev = true
 			app.Logger = logger.NewLogger()
-			cluster := cluster.NewCluster(app)
+			cluster, _ := cluster.NewCluster(app)
 
 			return cluster.Start()
 		},

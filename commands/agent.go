@@ -10,6 +10,7 @@ func Agent() *cli.Command {
 		Usage: "option to start an instance",
 		Commands: []*cli.Command{
 			Dev(),
+			Config(),
 		},
 	}
 }

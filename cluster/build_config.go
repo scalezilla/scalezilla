@@ -1,12 +1,14 @@
 package cluster
 
 import (
+	"context"
 	"fmt"
 	"net"
 	"os"
 	"os/signal"
 	"path/filepath"
 	"syscall"
+	"time"
 
 	"github.com/Lord-Y/rafty"
 	bolt "go.etcd.io/bbolt"
@@ -15,8 +17,8 @@ import (
 // buildAddressAndID will build the node address and id
 func (c *Cluster) buildAddressAndID() {
 	c.address = net.TCPAddr{
-		IP:   net.ParseIP(c.hostIPAddress),
-		Port: int(c.raftGRPCPort),
+		IP:   net.ParseIP(c.config.HostIPAddress),
+		Port: int(c.config.RaftGRPCPort),
 	}
 
 	c.id = fmt.Sprintf("%d", c.address.Port)
@@ -35,24 +37,42 @@ func (c *Cluster) buildPeers() []rafty.InitialPeer {
 
 // buildDataDir will build the working dir of the current node
 func (c *Cluster) buildDataDir() {
-	c.dataDir = filepath.Join(os.TempDir(), "scalezilla", c.id)
+	c.config.DataDir = filepath.Join(os.TempDir(), "scalezilla", c.id)
 }
 
 // buildStore will build the bolt store
 func (c *Cluster) buildStore() (*rafty.BoltStore, error) {
 	storeOptions := rafty.BoltOptions{
-		DataDir: c.dataDir,
+		DataDir: c.config.DataDir,
 		Options: bolt.DefaultOptions,
 	}
 
 	return rafty.NewBoltStorage(storeOptions)
 }
 
-// buildSignal will build the signal required to stop the cluster
-func (c *Cluster) buildSignal() {
-	c.quit = make(chan os.Signal, 1)
-	// kill (no param) default send syscanll.SIGTERM
-	// kill -2 is syscall.SIGINT
-	// kill -9 is syscall. SIGKILL but can"t be catch, so don't need add it
-	signal.Notify(c.quit, syscall.SIGINT, syscall.SIGTERM)
+// BuildSignal will build signal requirements based on provided
+// context
+func BuildSignal(ctx context.Context) (context.Context, context.CancelFunc) {
+	return signal.NotifyContext(ctx, os.Interrupt, syscall.SIGTERM)
+}
+
+// buildDevConfig build dev config to start a dev single cluster
+func (c *Cluster) buildDevConfig(config ClusterInitialConfig) {
+	c.isVoter = true
+	c.dev = true
+	c.raftMetricPrefix = config.TestRaftMetricPrefix
+	c.clusterName = config.ClusterName
+	c.config.BindAddress = config.BindAddress
+	c.config.HostIPAddress = config.HostIPAddress
+	c.config.HTTPPort = config.HTTPPort
+	c.config.RaftGRPCPort = config.RaftGRPCPort
+	c.config.GRPCPort = config.GRPCPort
+	server := &Server{
+		Raft: &RaftConfig{
+			TimeMultiplier:    1,
+			SnapshotInterval:  30 * time.Second,
+			SnapshotThreshold: defaultSnapshotThreshold,
+		},
+	}
+	c.config.Server = server
 }

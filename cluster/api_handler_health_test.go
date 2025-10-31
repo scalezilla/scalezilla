@@ -10,7 +10,8 @@ func TestAPIHandlers(t *testing.T) {
 	assert := assert.New(t)
 
 	t.Run("health", func(t *testing.T) {
-		cluster := makeBasicCluster(false)
+		cfg := basicClusterConfig{randomPort: false, dev: true}
+		cluster := makeBasicCluster(cfg)
 		router := cluster.newApiRouters()
 
 		tests := []struct {

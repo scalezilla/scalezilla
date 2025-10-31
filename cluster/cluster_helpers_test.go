@@ -6,26 +6,44 @@ import (
 	"net/http/httptest"
 	"time"
 
+	"github.com/jackc/fake"
 	"github.com/scalezilla/scalezilla/logger"
 )
 
-func makeBasicCluster(randomPort bool) *Cluster {
-	if randomPort {
-		testHTTPPort = uint16(makeRandomInt(16000, 40000))
-		testRaftGRPCPort += 1
-		testGRPCPort += 1
+type basicClusterConfig struct {
+	randomPort, dev, isVoter bool
+}
+
+func makeBasicCluster(cfg basicClusterConfig) *Cluster {
+	if cfg.randomPort {
+		defaultHTTPPort = uint16(makeRandomInt(16000, 40000))
+		defaultRaftGRPCPort += 1
+		defaultGRPCPort += 1
 	}
 
 	config := ClusterInitialConfig{
-		Logger:        logger.NewLogger(),
-		BindAddress:   testBindAddress,
-		HostIPAddress: testHostIPAddress,
-		HTTPPort:      testHTTPPort,
-		RaftGRPCPort:  testRaftGRPCPort,
-		GRPCPort:      testGRPCPort,
+		Logger:               logger.NewLogger(),
+		BindAddress:          defaultBindAddress,
+		HostIPAddress:        defaultHostIPAddress,
+		HTTPPort:             defaultHTTPPort,
+		RaftGRPCPort:         defaultRaftGRPCPort,
+		GRPCPort:             defaultGRPCPort,
+		TestRaftMetricPrefix: fake.CharactersN(50),
+		Dev:                  cfg.dev,
 	}
-	z := NewCluster(config)
+	z, _ := NewCluster(config)
 	z.buildAddressAndID()
+
+	if !cfg.isVoter {
+		client := &Client{
+			Raft: &RaftConfig{
+				TimeMultiplier:    1,
+				SnapshotInterval:  30 * time.Second,
+				SnapshotThreshold: defaultSnapshotThreshold,
+			},
+		}
+		z.config.Client = client
+	}
 
 	return z
 }
