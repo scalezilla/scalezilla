@@ -1,5 +1,7 @@
 package cluster
 
+import "github.com/scalezilla/scalezilla/osdiscovery"
+
 // NewCluster build the requirements to start the cluster
 func NewCluster(config ClusterInitialConfig) (*Cluster, error) {
 	c := &Cluster{
@@ -16,6 +18,8 @@ func NewCluster(config ClusterInitialConfig) (*Cluster, error) {
 	c.stopRaftyFunc = c.stopRafty
 	c.raftyStoreCloseFunc = c.raftyStoreClose
 	c.raftMetricPrefix = scalezillaAppName
+	c.checkSystemInfoFunc = c.checkSystemInfo
+	c.osdiscoveryFunc = osdiscovery.NewSystemInfo
 
 	c.buildDataDir()
 	if config.Dev {
@@ -35,6 +39,10 @@ func (c *Cluster) Start() error {
 	c.buildAddressAndID()
 
 	var err error
+	if err := c.checkSystemInfoFunc(); err != nil {
+		return err
+	}
+
 	if c.rafty, err = c.newRaftyFunc(); err != nil {
 		return err
 	}

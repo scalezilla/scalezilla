@@ -7,6 +7,7 @@ import (
 
 	"github.com/Lord-Y/rafty"
 	"github.com/rs/zerolog"
+	"github.com/scalezilla/scalezilla/osdiscovery"
 )
 
 const scalezillaAppName string = "scalezilla"
@@ -140,6 +141,15 @@ type Cluster struct {
 
 	// config is the configuration to use to start the cluster
 	config Config
+
+	// systemInfo holds os discovery requirements
+	systemInfo *osdiscovery.SystemInfo
+
+	// checkSystemInfoFunc is used as a dependency injection
+	checkSystemInfoFunc func() error
+
+	// osdiscoveryFunc is used as a dependency injection
+	osdiscoveryFunc func() *osdiscovery.SystemInfo
 }
 
 // httpServer is an interface implements http.Server requirements.
