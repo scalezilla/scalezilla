@@ -27,4 +27,10 @@ var (
 	// ErrServerOrClientModeMustBeEnabled is return when server.enabled and client.enabled are both false.
 	// User must set one of them to true
 	ErrServerOrClientModeMustBeEnabled = errors.New("server or client flag 'enabled' must be set to true")
+
+	// ErrCgroupV2Required is return when cgroup v2 is not detected on linux OS
+	ErrCgroupV2Required = errors.New("cgroup v2 is required")
+
+	// ErrOsUnsupported is returned when runtime.GOOS != "linux"
+	// ErrOsUnsupported = errors.New("os unsupported")
 )
