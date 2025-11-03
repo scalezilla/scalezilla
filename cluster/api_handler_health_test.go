@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestAPIHandlers(t *testing.T) {
+func TestCluster_api_handlers(t *testing.T) {
 	assert := assert.New(t)
 
 	t.Run("health", func(t *testing.T) {

@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestRafty(t *testing.T) {
+func TestCluster_rafty(t *testing.T) {
 	assert := assert.New(t)
 
 	t.Run("new_rafty_error", func(t *testing.T) {

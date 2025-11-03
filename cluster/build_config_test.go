@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestBuildConfig(t *testing.T) {
+func TestCluster_build_config(t *testing.T) {
 	assert := assert.New(t)
 
 	t.Run("build_address_and_id", func(t *testing.T) {

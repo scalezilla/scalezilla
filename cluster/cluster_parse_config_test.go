@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestParseConfig(t *testing.T) {
+func TestCluster_parse_config(t *testing.T) {
 	assert := assert.New(t)
 
 	t.Run("validate_test_data", func(t *testing.T) {

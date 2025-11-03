@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestAPIServer(t *testing.T) {
+func TestCluster_api_server(t *testing.T) {
 	assert := assert.New(t)
 
 	t.Run("start_success", func(t *testing.T) {

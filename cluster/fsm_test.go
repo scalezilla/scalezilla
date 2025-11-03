@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestFSM(t *testing.T) {
+func TestCluster_fsm(t *testing.T) {
 	assert := assert.New(t)
 
 	t.Run("new_snapshot", func(t *testing.T) {
