@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestCluster(t *testing.T) {
+func TestCluster_init(t *testing.T) {
 	assert := assert.New(t)
 
 	t.Run("new_cluster_config_success", func(t *testing.T) {
