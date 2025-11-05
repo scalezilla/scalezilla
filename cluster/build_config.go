@@ -16,17 +16,22 @@ import (
 
 // buildAddressAndID will build the node address and id
 func (c *Cluster) buildAddressAndID() {
-	c.address = net.TCPAddr{
+	c.grpcAddress = net.TCPAddr{
+		IP:   net.ParseIP(c.config.HostIPAddress),
+		Port: int(c.config.GRPCPort),
+	}
+
+	c.raftyAddress = net.TCPAddr{
 		IP:   net.ParseIP(c.config.HostIPAddress),
 		Port: int(c.config.RaftGRPCPort),
 	}
 
-	c.id = fmt.Sprintf("%d", c.address.Port)
+	c.id = fmt.Sprintf("%d", c.raftyAddress.Port)
 }
 
 // buildPeers will build the initial peer members of the cluster
 func (c *Cluster) buildPeers() []rafty.InitialPeer {
-	peers := []rafty.InitialPeer{{Address: c.address.String()}}
+	peers := []rafty.InitialPeer{{Address: c.raftyAddress.String()}}
 
 	for _, v := range c.members {
 		peers = append(peers, rafty.InitialPeer{Address: v})
@@ -65,8 +70,8 @@ func (c *Cluster) buildDevConfig(config ClusterInitialConfig) {
 	c.config.BindAddress = config.BindAddress
 	c.config.HostIPAddress = config.HostIPAddress
 	c.config.HTTPPort = config.HTTPPort
-	c.config.RaftGRPCPort = config.RaftGRPCPort
 	c.config.GRPCPort = config.GRPCPort
+	c.config.RaftGRPCPort = config.RaftGRPCPort
 	server := &Server{
 		Raft: &RaftConfig{
 			TimeMultiplier:    1,

@@ -18,7 +18,8 @@ func TestCluster_build_config(t *testing.T) {
 		}
 
 		cluster.buildAddressAndID()
-		assert.NotNil(cluster.address.String())
+		assert.NotNil(cluster.grpcAddress.String())
+		assert.NotNil(cluster.raftyAddress.String())
 		assert.NotNil(cluster.id)
 	})
 
