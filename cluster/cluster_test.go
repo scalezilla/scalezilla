@@ -75,6 +75,27 @@ func TestCluster_init(t *testing.T) {
 		assert.Error(cluster.Start())
 	})
 
+	t.Run("start_grpc_server_func_error", func(t *testing.T) {
+		cfg := basicClusterConfig{randomPort: true, dev: true}
+		cluster := makeBasicCluster(cfg)
+		defer func() {
+			_ = os.RemoveAll(cluster.config.DataDir)
+		}()
+
+		cluster.checkSystemInfoFunc = func() error {
+			return nil
+		}
+
+		cluster.newRaftyFunc = func() (*rafty.Rafty, error) {
+			return nil, nil
+		}
+
+		cluster.startGRPCServerFunc = func() error {
+			return errors.New("start error")
+		}
+		assert.Error(cluster.Start())
+	})
+
 	t.Run("start_rafty_func_error", func(t *testing.T) {
 		cfg := basicClusterConfig{randomPort: true, dev: true}
 		cluster := makeBasicCluster(cfg)
@@ -88,6 +109,10 @@ func TestCluster_init(t *testing.T) {
 
 		cluster.newRaftyFunc = func() (*rafty.Rafty, error) {
 			return nil, nil
+		}
+
+		cluster.startGRPCServerFunc = func() error {
+			return nil
 		}
 
 		cluster.startRaftyFunc = func() error {
@@ -104,6 +129,10 @@ func TestCluster_init(t *testing.T) {
 		}()
 
 		cluster.checkSystemInfoFunc = func() error {
+			return nil
+		}
+
+		cluster.startGRPCServerFunc = func() error {
 			return nil
 		}
 
@@ -131,6 +160,10 @@ func TestCluster_init(t *testing.T) {
 		}()
 
 		cluster.checkSystemInfoFunc = func() error {
+			return nil
+		}
+
+		cluster.startGRPCServerFunc = func() error {
 			return nil
 		}
 
@@ -176,6 +209,10 @@ func TestCluster_init(t *testing.T) {
 		// 	return nil, nil
 		// }
 
+		cluster.startGRPCServerFunc = func() error {
+			return nil
+		}
+
 		cluster.startRaftyFunc = func() error {
 			return nil
 		}
@@ -187,6 +224,8 @@ func TestCluster_init(t *testing.T) {
 		cluster.stopAPIServerFunc = func() error {
 			return nil
 		}
+
+		cluster.stopGRPCServerFunc = func() {}
 
 		cluster.stopRaftyFunc = func() {}
 

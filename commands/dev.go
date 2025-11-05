@@ -42,18 +42,18 @@ func Dev() *cli.Command {
 				Destination: &app.HTTPPort,
 			},
 			&cli.Uint16Flag{
-				Name:        "raft-grpc-port",
-				Aliases:     []string{"rgp"},
-				Usage:       "grpc port for raft purpose",
-				Value:       15001,
-				Destination: &app.RaftGRPCPort,
-			},
-			&cli.Uint16Flag{
 				Name:        "grpc-port",
 				Aliases:     []string{"gp"},
 				Usage:       "grpc port for internal purpose",
-				Value:       15002,
+				Value:       15001,
 				Destination: &app.GRPCPort,
+			},
+			&cli.Uint16Flag{
+				Name:        "raft-grpc-port",
+				Aliases:     []string{"rgp"},
+				Usage:       "grpc port for raft purpose",
+				Value:       15002,
+				Destination: &app.RaftGRPCPort,
 			},
 			&cli.BoolFlag{
 				Name:        "fail",

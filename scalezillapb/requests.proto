@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+option go_package = "github.com/scalezilla/scalezilla/scalezillapb";
+
+package scalezillapb;
+
+/*
+
+Naming convention:
+https://protobuf.dev/programming-guides/style/
+
+Types:
+https://protobuf.dev/programming-guides/proto3/
+*/
+
+message ServicePortsDiscoveryRequestReply {
+  string address   = 1;
+  string id        = 2;
+  uint32 port_http = 3;
+  uint32 port_grpc = 4;
+  uint32 port_raft = 5;
+}
+
+service Scalezilla {
+  rpc ServicePortsDiscovery(ServicePortsDiscoveryRequestReply) returns (ServicePortsDiscoveryRequestReply) {}
+}

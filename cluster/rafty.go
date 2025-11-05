@@ -44,7 +44,7 @@ func (c *Cluster) newRafty() (*rafty.Rafty, error) {
 	c.fsm = newFSM(c.raftyStore)
 	snapshotConfig := newSnapshot(c.config.DataDir, 3)
 
-	return rafty.NewRafty(c.address, c.id, options, c.raftyStore, c.raftyStore, c.fsm, snapshotConfig)
+	return rafty.NewRafty(c.raftyAddress, c.id, options, c.raftyStore, c.raftyStore, c.fsm, snapshotConfig)
 }
 
 // startRafty is use to start rafty cluster

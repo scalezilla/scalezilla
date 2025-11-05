@@ -3,11 +3,14 @@ package cluster
 import (
 	"context"
 	"net"
+	"sync/atomic"
 	"time"
 
 	"github.com/Lord-Y/rafty"
 	"github.com/rs/zerolog"
 	"github.com/scalezilla/scalezilla/osdiscovery"
+	"github.com/scalezilla/scalezilla/scalezillapb"
+	"google.golang.org/grpc"
 )
 
 const scalezillaAppName string = "scalezilla"
@@ -18,13 +21,14 @@ var (
 	defaultBindAddress              string        = "127.0.0.1"
 	defaultHostIPAddress            string        = "127.0.0.1"
 	defaultHTTPPort                 uint16        = 15000
-	defaultRaftGRPCPort             uint16        = 15001
-	defaultGRPCPort                 uint16        = 15002
+	defaultGRPCPort                 uint16        = 15001
+	defaultRaftGRPCPort             uint16        = 15002
 	defaultSnapshotInterval         time.Duration = 5 * time.Minute
 	defaultSnapshotThreshold        uint64        = 128
 	defaultClusterJoinRetryInterval time.Duration = 15 * time.Second
 	defaultClusterJoinRetryMax      uint16        = 5
 	defaultMaxAppendEntries         uint64        = 1024
+	defaultGrpcForceTimeout         time.Duration = 30 * time.Second
 )
 
 // ClusterInitialConfig is the configuration used by the cli
@@ -52,11 +56,11 @@ type ClusterInitialConfig struct {
 	// HTTPPort to use to handle http requests
 	HTTPPort uint16
 
-	// RaftGRPCPort is the port for rafty cluster purpose
-	RaftGRPCPort uint16
-
 	// GRPCPort is the port for internal cluster purpose
 	GRPCPort uint16
+
+	// RaftGRPCPort is the port for rafty cluster purpose
+	RaftGRPCPort uint16
 
 	// Members are the rafty cluster members
 	Members []string
@@ -96,8 +100,11 @@ type Cluster struct {
 	// Members are the rafty cluster members
 	members []string
 
-	// address is the address of the current node
-	address net.TCPAddr
+	// grpcAddress is the address of the current node
+	grpcAddress net.TCPAddr
+
+	// raftyAddress is the address of the current node
+	raftyAddress net.TCPAddr
 
 	// id is the id of the current node
 	id string
@@ -129,6 +136,31 @@ type Cluster struct {
 	// stopAPIServerFunc is used as a dependency injection
 	stopAPIServerFunc func() error
 
+	// startGRPCServerFunc is used as a dependency injection
+	startGRPCServerFunc func() error
+
+	// grpcListenFunc holds the listener of the grpc server
+	grpcListenFunc func(network string, address string) (net.Listener, error)
+
+	// grpcListen holds the listener of the grpc server
+	grpcListen net.Listener
+
+	// grpcServer holds the grpc server
+	grpcServer *grpc.Server
+
+	// newGRPCServerFunc is used as a dependency injection
+	newGRPCServerFunc func(opt ...grpc.ServerOption) *grpc.Server
+
+	// scalezillapb.ScalezillaServer holds the interface
+	// to interact with the grpc server
+	scalezillapb.ScalezillaServer
+
+	// grpcForceTimeout is used to force stop the grpc server
+	grpcForceTimeout time.Duration
+
+	// stopGRPCServerFunc is used as a dependency injection
+	stopGRPCServerFunc func()
+
 	// stopRaftyFunc is used as a dependency injection
 	stopRaftyFunc func()
 
@@ -150,6 +182,11 @@ type Cluster struct {
 
 	// osdiscoveryFunc is used as a dependency injection
 	osdiscoveryFunc func() *osdiscovery.SystemInfo
+
+	// isRunning is a helper indicating is the node is up or down.
+	// It set to false, it will reject all incoming grpc requests
+	// with shutting down error
+	isRunning atomic.Bool
 }
 
 // httpServer is an interface implements http.Server requirements.

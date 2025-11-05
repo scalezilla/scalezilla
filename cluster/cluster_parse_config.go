@@ -40,12 +40,12 @@ func (c *Cluster) parseConfig() error {
 		config.HTTPPort = defaultHTTPPort
 	}
 
-	if config.RaftGRPCPort == 0 {
-		config.RaftGRPCPort = defaultRaftGRPCPort
-	}
-
 	if config.GRPCPort == 0 {
 		config.GRPCPort = defaultGRPCPort
+	}
+
+	if config.RaftGRPCPort == 0 {
+		config.RaftGRPCPort = defaultRaftGRPCPort
 	}
 
 	if config.Server == nil && config.Client == nil {
