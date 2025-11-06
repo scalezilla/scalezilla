@@ -36,6 +36,6 @@ func TestCluster_system_info(t *testing.T) {
 			}
 		}
 
-		assert.Error(cluster.checkSystemInfo())
+		assert.ErrorIs(cluster.checkSystemInfo(), ErrCgroupV2Required)
 	})
 }
