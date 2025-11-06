@@ -33,6 +33,7 @@ jobs:
 
       - name: Run unit testing
         run: |
+          sed -i '/scalezilla\/scalezilla\/scalezillapb/d' coverage.out
           go test -v -race ./... -coverprofile=coverage.out
 
       - name: Print coverage status
