@@ -19,7 +19,9 @@ func (c *Cluster) startGRPCServer() error {
 		newServer = grpc.NewServer
 	}
 
+	c.mu.Lock()
 	c.grpcServer = newServer()
+	c.mu.Unlock()
 	scalezillapb.RegisterScalezillaServer(c.grpcServer, c.ScalezillaServer)
 
 	errChan := make(chan error, 1)
@@ -38,5 +40,7 @@ func (c *Cluster) startGRPCServer() error {
 
 // stopGRPCServer will stop the internal grpc server
 func (c *Cluster) stopGRPCServer() {
+	c.mu.Lock()
 	c.grpcServer.GracefulStop()
+	c.mu.Unlock()
 }

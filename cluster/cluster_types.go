@@ -3,6 +3,7 @@ package cluster
 import (
 	"context"
 	"net"
+	"sync"
 	"sync/atomic"
 	"time"
 
@@ -80,6 +81,9 @@ type ClusterInitialConfig struct {
 // Cluster holds all required configuration to start the instance
 type Cluster struct {
 	logger *zerolog.Logger
+
+	// mu is used to ensure lock concurrency
+	mu sync.Mutex
 
 	// configFile is the full path of the config to start the cluster
 	configFile string
