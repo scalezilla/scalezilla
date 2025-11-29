@@ -80,4 +80,5 @@ func (c *Cluster) buildDevConfig(config ClusterInitialConfig) {
 		},
 	}
 	c.config.Server = server
+	c.members = config.Members
 }

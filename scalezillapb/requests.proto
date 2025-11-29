@@ -19,6 +19,8 @@ message ServicePortsDiscoveryRequestReply {
   uint32 port_http = 3;
   uint32 port_grpc = 4;
   uint32 port_raft = 5;
+  bool   is_voter  = 6;
+  string node_pool = 7;
 }
 
 service Scalezilla {

@@ -28,6 +28,8 @@ type ServicePortsDiscoveryRequestReply struct {
 	PortHttp      uint32                 `protobuf:"varint,3,opt,name=port_http,json=portHttp,proto3" json:"port_http,omitempty"`
 	PortGrpc      uint32                 `protobuf:"varint,4,opt,name=port_grpc,json=portGrpc,proto3" json:"port_grpc,omitempty"`
 	PortRaft      uint32                 `protobuf:"varint,5,opt,name=port_raft,json=portRaft,proto3" json:"port_raft,omitempty"`
+	IsVoter       bool                   `protobuf:"varint,6,opt,name=is_voter,json=isVoter,proto3" json:"is_voter,omitempty"`
+	NodePool      string                 `protobuf:"bytes,7,opt,name=node_pool,json=nodePool,proto3" json:"node_pool,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -97,17 +99,33 @@ func (x *ServicePortsDiscoveryRequestReply) GetPortRaft() uint32 {
 	return 0
 }
 
+func (x *ServicePortsDiscoveryRequestReply) GetIsVoter() bool {
+	if x != nil {
+		return x.IsVoter
+	}
+	return false
+}
+
+func (x *ServicePortsDiscoveryRequestReply) GetNodePool() string {
+	if x != nil {
+		return x.NodePool
+	}
+	return ""
+}
+
 var File_scalezillapb_requests_proto protoreflect.FileDescriptor
 
 const file_scalezillapb_requests_proto_rawDesc = "" +
 	"\n" +
-	"\x1bscalezillapb/requests.proto\x12\fscalezillapb\"\xa4\x01\n" +
+	"\x1bscalezillapb/requests.proto\x12\fscalezillapb\"\xdc\x01\n" +
 	"!ServicePortsDiscoveryRequestReply\x12\x18\n" +
 	"\aaddress\x18\x01 \x01(\tR\aaddress\x12\x0e\n" +
 	"\x02id\x18\x02 \x01(\tR\x02id\x12\x1b\n" +
 	"\tport_http\x18\x03 \x01(\rR\bportHttp\x12\x1b\n" +
 	"\tport_grpc\x18\x04 \x01(\rR\bportGrpc\x12\x1b\n" +
-	"\tport_raft\x18\x05 \x01(\rR\bportRaft2\x89\x01\n" +
+	"\tport_raft\x18\x05 \x01(\rR\bportRaft\x12\x19\n" +
+	"\bis_voter\x18\x06 \x01(\bR\aisVoter\x12\x1b\n" +
+	"\tnode_pool\x18\a \x01(\tR\bnodePool2\x89\x01\n" +
 	"\n" +
 	"Scalezilla\x12{\n" +
 	"\x15ServicePortsDiscovery\x12/.scalezillapb.ServicePortsDiscoveryRequestReply\x1a/.scalezillapb.ServicePortsDiscoveryRequestReply\"\x00B/Z-github.com/scalezilla/scalezilla/scalezillapbb\x06proto3"
