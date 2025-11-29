@@ -130,9 +130,15 @@ func (c *Cluster) parseConfig() error {
 		if config.Client.ClusterJoin.RetryInterval == 0 {
 			config.Client.ClusterJoin.RetryInterval = defaultClusterJoinRetryInterval
 		}
+
+		if config.Client.NodePool == nil {
+			x := defaultNodePool
+			config.Client.NodePool = &x
+		}
 	}
 
 	c.config = config
+	c.nodePool = defaultNodePool
 	if c.test {
 		c.buildDataDir()
 	}

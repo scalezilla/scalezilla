@@ -28,7 +28,7 @@ func TestCluster_system_info(t *testing.T) {
 			_ = os.RemoveAll(cluster.config.DataDir)
 		}()
 
-		cluster.osdiscoveryFunc = func() *osdiscovery.SystemInfo {
+		cluster.di.osdiscoveryFunc = func() *osdiscovery.SystemInfo {
 			return &osdiscovery.SystemInfo{
 				Cgroups: &osdiscovery.Cgroups{
 					Version: 1,

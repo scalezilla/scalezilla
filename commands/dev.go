@@ -73,6 +73,13 @@ func Dev() *cli.Command {
 				Hidden:      true,
 				Destination: &app.TestRaftMetricPrefix,
 			},
+			&cli.StringFlag{
+				Name:        "node-pool",
+				Aliases:     []string{"p"},
+				Value:       "default",
+				Usage:       "Default node pool name",
+				Destination: &app.NodePool,
+			},
 		},
 		Action: func(ctx context.Context, _ *cli.Command) error {
 			if fail {

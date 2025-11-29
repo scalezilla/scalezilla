@@ -33,4 +33,10 @@ var (
 
 	// ErrOsUnsupported is returned when runtime.GOOS != "linux"
 	// ErrOsUnsupported = errors.New("os unsupported")
+
+	// ErrTimeout is triggered when an operation timed out
+	ErrTimeout = errors.New("operation timeout")
+
+	// ErrShutdown is triggered when the node is shutting down
+	ErrShutdown = errors.New("node is shutting down")
 )

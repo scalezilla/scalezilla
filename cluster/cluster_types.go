@@ -14,11 +14,14 @@ import (
 	"google.golang.org/grpc"
 )
 
-const scalezillaAppName string = "scalezilla"
+const (
+	scalezillaAppName  string = "scalezilla"
+	defaultClusterName string = "default"
+	defaultDataDir     string = "/var/lib/scalezilla"
+	defaultNodePool    string = "default"
+)
 
 var (
-	defaultClusterName              string        = "default"
-	defaultDataDir                  string        = "/var/lib/scalezilla"
 	defaultBindAddress              string        = "127.0.0.1"
 	defaultHostIPAddress            string        = "127.0.0.1"
 	defaultHTTPPort                 uint16        = 15000
@@ -69,6 +72,9 @@ type ClusterInitialConfig struct {
 	// ClusterName is the name of the current cluster
 	ClusterName string
 
+	// NodePool is the pool associated to the current node
+	NodePool string
+
 	// TestRaftMetricPrefix is only used during unit testing to override
 	// raft metric prefix
 	TestRaftMetricPrefix string
@@ -84,6 +90,9 @@ type Cluster struct {
 
 	// mu is used to ensure lock concurrency
 	mu sync.Mutex
+
+	// wg is the goroutines tracker
+	wg sync.WaitGroup
 
 	// configFile is the full path of the config to start the cluster
 	configFile string
@@ -113,6 +122,9 @@ type Cluster struct {
 	// id is the id of the current node
 	id string
 
+	// nodePool is the pool associated to the current node
+	nodePool string
+
 	// ctx is the context to use to stop the cluster
 	ctx context.Context
 
@@ -128,6 +140,71 @@ type Cluster struct {
 	// apiServer holds the config of the HTTP API server
 	apiServer httpServer
 
+	// di holds all dependency injection funcs
+	di dependencyInjections
+
+	// grpcListen holds the listener of the grpc server
+	grpcListen net.Listener
+
+	// grpcServer holds the grpc server
+	grpcServer *grpc.Server
+
+	// scalezillapb.ScalezillaServer holds the interface
+	// to interact with the grpc server
+	scalezillapb.ScalezillaServer
+
+	// grpcForceTimeout is used to force stop the grpc server
+	grpcForceTimeout time.Duration
+
+	// raftMetricPrefix is used to prefix rafty metrics
+	// with the provided value
+	raftMetricPrefix string
+
+	// config is the configuration to use to start the cluster
+	config Config
+
+	// systemInfo holds os discovery requirements
+	systemInfo *osdiscovery.SystemInfo
+
+	// // checkSystemInfoFunc is used as a dependency injection
+	// checkSystemInfoFunc func() error
+
+	// isRunning is a helper indicating is the node is up or down.
+	// It set to false, it will reject all incoming grpc requests
+	// with shutting down error
+	isRunning atomic.Bool
+
+	// bootstrapExpectedSizeReach is an atomic bool flag set
+	// to check if the bootstrap size is reached
+	bootstrapExpectedSizeReach atomic.Bool
+
+	// bootstrapExpectedSize is a counter that goes
+	// with bootstrapExpectedSizeReach variable
+	bootstrapExpectedSize atomic.Uint64
+
+	// nodeMap is a map of all nodes in the cluster
+	nodeMap map[string]*nodeMap
+
+	// connectionManager holds connections for all nodes
+	connectionManager connectionManager
+
+	// rpcServicePortsDiscoveryChanReq is used by the grpc
+	// receiver to respond back to the caller
+	rpcServicePortsDiscoveryChanReq chan RPCRequest
+
+	// rpcServicePortsDiscoveryChanResp is used to receive
+	// answers sent by actual node
+	rpcServicePortsDiscoveryChanResp chan RPCResponse
+
+	// checkBootstrapSizeDuration is the frequency at which
+	// to make rpc calls to other nodes to satisfy
+	// bootstrapExpectedSize variable
+	checkBootstrapSizeDuration time.Duration
+}
+
+// dependencyInjections is a struct holding all
+// dependency injection funcs
+type dependencyInjections struct {
 	// newRaftyFunc is used as a dependency injection
 	newRaftyFunc func() (*rafty.Rafty, error)
 
@@ -146,18 +223,8 @@ type Cluster struct {
 	// grpcListenFunc holds the listener of the grpc server
 	grpcListenFunc func(network string, address string) (net.Listener, error)
 
-	// grpcListen holds the listener of the grpc server
-	grpcListen net.Listener
-
-	// grpcServer holds the grpc server
-	grpcServer *grpc.Server
-
 	// newGRPCServerFunc is used as a dependency injection
 	newGRPCServerFunc func(opt ...grpc.ServerOption) *grpc.Server
-
-	// scalezillapb.ScalezillaServer holds the interface
-	// to interact with the grpc server
-	scalezillapb.ScalezillaServer
 
 	// grpcForceTimeout is used to force stop the grpc server
 	grpcForceTimeout time.Duration
@@ -171,26 +238,20 @@ type Cluster struct {
 	// raftyStoreCloseFunc is used as a dependency injection
 	raftyStoreCloseFunc func() error
 
-	// raftMetricPrefix is used to prefix rafty metrics
-	// with the provided value
-	raftMetricPrefix string
-
-	// config is the configuration to use to start the cluster
-	config Config
-
-	// systemInfo holds os discovery requirements
-	systemInfo *osdiscovery.SystemInfo
-
 	// checkSystemInfoFunc is used as a dependency injection
 	checkSystemInfoFunc func() error
 
 	// osdiscoveryFunc is used as a dependency injection
 	osdiscoveryFunc func() *osdiscovery.SystemInfo
 
-	// isRunning is a helper indicating is the node is up or down.
-	// It set to false, it will reject all incoming grpc requests
-	// with shutting down error
-	isRunning atomic.Bool
+	// grpcServerSetupFunc is used as a dependency injection
+	grpcServerSetupFunc func()
+
+	// checkBootstrapSizeFunc is used as a dependency injection
+	checkBootstrapSizeFunc func()
+
+	// sendRPCFunc is used as a dependency injection
+	sendRPCFunc func(address string, client scalezillapb.ScalezillaClient, request RPCRequest)
 }
 
 // httpServer is an interface implements http.Server requirements.
@@ -261,6 +322,9 @@ type Client struct {
 
 	// ClusterJoin holds requirements to join the cluster
 	ClusterJoin *ClusterJoin `hcl:"cluster_join,block"`
+
+	// NodePool is the pool associated to the current node
+	NodePool *string `hcl:"node_pool"`
 }
 
 // RaftConfig holds the requirements to start the raft cluster
@@ -307,4 +371,40 @@ type ClusterJoin struct {
 	// try to contact the initial members.
 	// Default to 15s
 	RetryInterval time.Duration `hcl:"retry_interval,optional"`
+}
+
+// nodeMap is a map of all nodes in the cluster
+type nodeMap struct {
+	// IsVoter when set to true means it's a server node
+	IsVoter bool
+
+	// ID is the ID of the node
+	ID string
+
+	// Address is the host ip of the node
+	Address string
+
+	// HTTPPort is the http port of the node
+	HTTPPort uint32
+
+	// GRPCPort is the http port of the node
+	GRPCPort uint32
+
+	// RaftyPort is the raft port of the node
+	RaftyPort uint32
+
+	// NodePool is the node pool of the node
+	NodePool string
+}
+
+// connectionManager is used to manage all grpc connections nodes
+type connectionManager struct {
+	// mu is used to ensure lock concurrency
+	mu sync.Mutex
+
+	// connections holds gprc server connection for all clients
+	connections map[string]*grpc.ClientConn
+
+	// clients holds gprc rafty client for all clients
+	clients map[string]scalezillapb.ScalezillaClient
 }
