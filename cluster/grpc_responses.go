@@ -20,5 +20,6 @@ func (c *Cluster) respServicePortsDiscovery(data RPCResponse) {
 			NodePool:  response.NodePool,
 		}
 		c.mu.Unlock()
+		c.bootstrapExpectedSize.Add(1)
 	}
 }
