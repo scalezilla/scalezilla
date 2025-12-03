@@ -47,8 +47,8 @@ Vagrant.configure("2") do |config|
         vb.check_guest_additions = false
     end
 
-    srv.vm.provision "shell", name: "install_debian_os_package", path: "./scripts/install_debian_os_package.sh"
-    srv.vm.provision "shell", name: "install_golang", path: "./scripts/install_golang.sh"
+    srv.vm.provision "os", type: "shell", name: "install_debian_os_package", path: "./scripts/install_debian_os_package.sh"
+    srv.vm.provision "golang", type: "shell", name: "install_golang", path: "./scripts/install_golang.sh"
   end
 
   0.upto(MACHINES['server'][:count]) do |index|
@@ -66,9 +66,9 @@ Vagrant.configure("2") do |config|
         vb.check_guest_additions = false
       end
 
-      srv.vm.provision "shell", name: "install_debian_os_package", path: "./scripts/install_debian_os_package.sh"
-      srv.vm.provision "shell", name: "install_golang", path: "./scripts/install_golang.sh"
-      srv.vm.provision "shell", name: "scalezilla", inline: "/home/vagrant/scalezilla/scripts/scalezilla.sh config_success_server#{id}.hcl"
+      srv.vm.provision "os", type: "shell", name: "install_debian_os_package", path: "./scripts/install_debian_os_package.sh"
+      srv.vm.provision "golang", type: "shell", name: "install_golang", path: "./scripts/install_golang.sh"
+      srv.vm.provision "scalezilla", type: "shell", name: "scalezilla", inline: "/home/vagrant/scalezilla/scripts/scalezilla.sh config_success_server#{id}.hcl"
     end
   end
 
@@ -87,9 +87,9 @@ Vagrant.configure("2") do |config|
         vb.check_guest_additions = false
       end
 
-      srv.vm.provision "shell", name: "install_debian_os_package", path: "./scripts/install_debian_os_package.sh"
-      srv.vm.provision "shell", name: "install_golang", path: "./scripts/install_golang.sh"
-      srv.vm.provision "shell", name: "scalezilla", inline: "/home/vagrant/scalezilla/scripts/scalezilla.sh config_success_client#{id}.hcl"
+      srv.vm.provision "os", type: "shell", name: "install_debian_os_package", path: "./scripts/install_debian_os_package.sh"
+      srv.vm.provision "golang", type: "shell", name: "install_golang", path: "./scripts/install_golang.sh"
+      srv.vm.provision "scalezilla", type: "shell", name: "scalezilla", inline: "/home/vagrant/scalezilla/scripts/scalezilla.sh config_success_client#{id}.hcl"
     end
   end
 
@@ -107,8 +107,8 @@ Vagrant.configure("2") do |config|
 #        vb.name   = "#{server_name}"
 #      end
 #
-#      srv.vm.provision "shell", name: "install_redhat_os_package", path: "./scripts/install_redhat_os_package.sh"
-#      srv.vm.provision "shell", name: "install_golang", path: "./scripts/install_golang.sh"
+#      srv.vm.provision "os", type: "shell", name: "install_redhat_os_package", path: "./scripts/install_redhat_os_package.sh"
+#      srv.vm.provision "golang", type: "shell", name: "install_golang", path: "./scripts/install_golang.sh"
 #    end
 #  end
 
