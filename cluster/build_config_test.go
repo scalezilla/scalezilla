@@ -1,6 +1,7 @@
 package cluster
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -29,8 +30,22 @@ func TestCluster_build_config(t *testing.T) {
 				HostIPAddress: defaultHostIPAddress,
 				RaftGRPCPort:  defaultRaftGRPCPort,
 			},
+			nodeMap: make(map[string]*nodeMap),
 		}
-		cluster.members = append(cluster.members, "127.0.0.1:16000")
+		httpPort := 16000
+		grpcPort := 16001
+		raftPort := 16002
+		address := "127.0.0.1"
+		cluster.members = append(cluster.members, fmt.Sprintf("%s:%d", address, grpcPort))
+		cluster.nodeMap["16000"] = &nodeMap{
+			IsVoter:   true,
+			ID:        fmt.Sprintf("%d", grpcPort),
+			Address:   address,
+			HTTPPort:  uint32(httpPort),
+			GRPCPort:  uint32(grpcPort),
+			RaftyPort: uint32(raftPort),
+			NodePool:  defaultNodePool,
+		}
 
 		assert.NotNil(cluster.buildPeers())
 	})
