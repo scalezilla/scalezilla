@@ -23,7 +23,7 @@ func (c *Cluster) startGRPCServer() error {
 	c.mu.Lock()
 	c.grpcServer = newServer()
 	c.mu.Unlock()
-	scalezillapb.RegisterScalezillaServer(c.grpcServer, c.ScalezillaServer)
+	scalezillapb.RegisterScalezillaServer(c.grpcServer, c)
 
 	errChan := make(chan error, 1)
 	go func() {
@@ -89,6 +89,7 @@ func (c *Cluster) checkBootstrapSize() {
 
 		case <-timer.C:
 			if c.bootstrapExpectedSize.Load()+1 == c.config.Server.Raft.BootstrapExpectedSize {
+				c.logger.Info().Msgf("Service port discovery size reached %d", c.bootstrapExpectedSize.Load())
 				c.bootstrapExpectedSizeReach.Store(true)
 				return
 			}
