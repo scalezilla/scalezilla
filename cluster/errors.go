@@ -22,7 +22,12 @@ var (
 	// ErrClientClusterJoinBlockInvalid is return when cluster_join block is nil
 	ErrClientClusterJoinBlockInvalid = errors.New("client cluster_join block invalid")
 
-	ErrClusterJoinInitialMembersInvalid = errors.New("cluster_join.initial_members cannot be empty")
+	// ErrClusterJoinInitialMembersEmpty is returned when cluster_join.initial_members is empty
+	ErrClusterJoinInitialMembersEmpty = errors.New("cluster_join.initial_members cannot be empty")
+
+	// ErrClusterJoinInitialMembersInvalid is return when parsed members
+	// are invalid
+	ErrClusterJoinInitialMembersInvalid = errors.New("parsed cluster_join.initial_members are invalid")
 
 	// ErrServerOrClientModeMustBeEnabled is return when server.enabled and client.enabled are both false.
 	// User must set one of them to true

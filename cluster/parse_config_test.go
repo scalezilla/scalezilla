@@ -1,6 +1,7 @@
 package cluster
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -42,4 +43,30 @@ func TestCluster_parse_config(t *testing.T) {
 		_, err := NewCluster(config)
 		assert.Error(err)
 	})
+}
+
+func TestCluster_parse_members(t *testing.T) {
+	assert := assert.New(t)
+
+	tests := []struct {
+		members []string
+		result  []string
+	}{
+		{
+			members: []string{"1.2.3.4"},
+			result:  []string{fmt.Sprintf("1.2.3.4:%d", defaultGRPCPort)},
+		},
+		{
+			members: []string{"1.2.3.4:12345"},
+			result:  []string{"1.2.3.4:12345"},
+		},
+		{
+			members: []string{"[foo]:[bar]baz"},
+			result:  nil,
+		},
+	}
+
+	for _, tc := range tests {
+		assert.Equal(tc.result, parseMembers(tc.members))
+	}
 }
