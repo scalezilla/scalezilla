@@ -1,6 +1,10 @@
 package cluster
 
 import (
+	"fmt"
+	"net"
+	"strings"
+
 	"github.com/hashicorp/hcl/v2/gohcl"
 	"github.com/hashicorp/hcl/v2/hclparse"
 )
@@ -73,15 +77,16 @@ func (c *Cluster) parseConfig() error {
 	}
 
 	if config.Server != nil && config.Server.ClusterJoin != nil && len(config.Server.ClusterJoin.InitialMembers) == 0 {
-		return ErrClusterJoinInitialMembersInvalid
+		return ErrClusterJoinInitialMembersEmpty
 	}
 
 	if config.Client != nil && config.Client.ClusterJoin != nil && len(config.Client.ClusterJoin.InitialMembers) == 0 {
-		return ErrClusterJoinInitialMembersInvalid
+		return ErrClusterJoinInitialMembersEmpty
 	}
 
 	if config.Server != nil && config.Server.Enabled {
 		c.isVoter = true
+		c.members = config.Server.ClusterJoin.InitialMembers
 
 		if config.Server.Raft.TimeMultiplier == 0 {
 			config.Server.Raft.TimeMultiplier = 1
@@ -108,6 +113,8 @@ func (c *Cluster) parseConfig() error {
 	}
 
 	if config.Client != nil && config.Client.Enabled {
+		c.members = config.Client.ClusterJoin.InitialMembers
+
 		if config.Client.Raft.TimeMultiplier == 0 {
 			config.Client.Raft.TimeMultiplier = 2
 		}
@@ -137,6 +144,11 @@ func (c *Cluster) parseConfig() error {
 		}
 	}
 
+	c.members = parseMembers(c.members)
+	if c.members == nil {
+		return ErrClusterJoinInitialMembersInvalid
+	}
+
 	c.config = config
 	c.nodePool = defaultNodePool
 	if c.test {
@@ -144,4 +156,24 @@ func (c *Cluster) parseConfig() error {
 	}
 
 	return nil
+}
+
+// parseMembers will parse each member to find the host and port.
+// If not port, the default GRPC port will be used
+func parseMembers(members []string) (z []string) {
+	for _, member := range members {
+		_, port, err := net.SplitHostPort(member)
+		if err != nil {
+			if !strings.Contains(err.Error(), "missing port in address") {
+				z = nil
+				return
+			}
+			if port == "" {
+				z = append(z, fmt.Sprintf("%s:%d", member, defaultGRPCPort))
+			}
+		} else {
+			z = append(z, member)
+		}
+	}
+	return
 }
