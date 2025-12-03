@@ -17,3 +17,8 @@ wget -q https://golang.org/dl/go${GO_VERSION}.${OS}-${ARCH}.tar.gz -P /tmp
 tar -C /usr/local -xzf /tmp/go${GO_VERSION}.${OS}-${ARCH}.tar.gz
 rm -rf /tmp/go${GO_VERSION}.${OS}-${ARCH}.tar.gz
 
+grep -q 'export PATH=$PATH:/usr/local/go/bin' /root/.bashrc || echo 'export PATH=$PATH:/usr/local/go/bin' >> /root/.bashrc
+grep -q 'export PATH=$PATH:/usr/local/go/bin' /home/vagrant/.bashrc || echo 'export PATH=$PATH:/usr/local/go/bin' >> /home/vagrant/.bashrc
+source ~/.bashrc
+go version
+
