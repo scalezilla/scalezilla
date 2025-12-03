@@ -268,7 +268,7 @@ type httpServer interface {
 // the cluster
 type Config struct {
 	// Hostname is the name of the current host
-	Hostname string `hcl:"cluster_name,optional"`
+	Hostname string `hcl:"hostname,optional"`
 
 	// ClusterName is the name of the current cluster
 	ClusterName string `hcl:"cluster_name,optional"`
