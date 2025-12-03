@@ -10,16 +10,18 @@ func (c *Cluster) respServicePortsDiscovery(data RPCResponse) {
 	response := data.Response.(RPCServicePortsDiscoveryResponse)
 	if response != (RPCServicePortsDiscoveryResponse{}) {
 		c.mu.Lock()
-		c.nodeMap[response.ID] = &nodeMap{
-			IsVoter:   response.IsVoter,
-			ID:        response.ID,
-			Address:   response.Address,
-			HTTPPort:  response.PortHTTP,
-			GRPCPort:  response.PortGRPC,
-			RaftyPort: response.PortRaft,
-			NodePool:  response.NodePool,
+		if _, ok := c.nodeMap[response.ID]; !ok {
+			c.bootstrapExpectedSize.Add(1)
+			c.nodeMap[response.ID] = &nodeMap{
+				IsVoter:   response.IsVoter,
+				ID:        response.ID,
+				Address:   response.Address,
+				HTTPPort:  response.PortHTTP,
+				GRPCPort:  response.PortGRPC,
+				RaftyPort: response.PortRaft,
+				NodePool:  response.NodePool,
+			}
 		}
 		c.mu.Unlock()
-		c.bootstrapExpectedSize.Add(1)
 	}
 }
