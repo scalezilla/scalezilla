@@ -37,7 +37,7 @@ func (c *Cluster) startGRPCServer() error {
 	}
 
 	c.wg.Go(c.grpcLoop)
-	c.wg.Go(c.checkBootstrapSize)
+	c.di.checkBootstrapSizeFunc()
 	return nil
 }
 
