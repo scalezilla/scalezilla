@@ -6,14 +6,16 @@ import "github.com/scalezilla/scalezilla/scalezillapb"
 func (c *Cluster) rcvServicePortsDiscovery(data RPCRequest) {
 	request := data.Request.(*scalezillapb.ServicePortsDiscoveryRequestReply)
 	c.mu.Lock()
-	c.nodeMap[request.Id] = &nodeMap{
-		Address:   request.Address,
-		ID:        request.Id,
-		HTTPPort:  request.PortHttp,
-		GRPCPort:  request.PortGrpc,
-		RaftyPort: request.PortRaft,
-		IsVoter:   request.IsVoter,
-		NodePool:  request.NodePool,
+	if _, ok := c.nodeMap[request.Id]; !ok {
+		c.nodeMap[request.Id] = &nodeMap{
+			Address:   request.Address,
+			ID:        request.Id,
+			HTTPPort:  request.PortHttp,
+			GRPCPort:  request.PortGrpc,
+			RaftyPort: request.PortRaft,
+			IsVoter:   request.IsVoter,
+			NodePool:  request.NodePool,
+		}
 	}
 	c.mu.Unlock()
 
