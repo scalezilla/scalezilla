@@ -226,9 +226,6 @@ type dependencyInjections struct {
 	// newGRPCServerFunc is used as a dependency injection
 	newGRPCServerFunc func(opt ...grpc.ServerOption) *grpc.Server
 
-	// grpcForceTimeout is used to force stop the grpc server
-	grpcForceTimeout time.Duration
-
 	// stopGRPCServerFunc is used as a dependency injection
 	stopGRPCServerFunc func()
 
@@ -243,9 +240,6 @@ type dependencyInjections struct {
 
 	// osdiscoveryFunc is used as a dependency injection
 	osdiscoveryFunc func() *osdiscovery.SystemInfo
-
-	// grpcServerSetupFunc is used as a dependency injection
-	grpcServerSetupFunc func()
 
 	// checkBootstrapSizeFunc is used as a dependency injection
 	checkBootstrapSizeFunc func()

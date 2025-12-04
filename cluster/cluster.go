@@ -39,7 +39,6 @@ func NewCluster(config ClusterInitialConfig) (*Cluster, error) {
 	c.di.raftyStoreCloseFunc = c.raftyStoreClose
 	c.di.checkSystemInfoFunc = c.checkSystemInfo
 	c.di.osdiscoveryFunc = osdiscovery.NewSystemInfo
-	// c.di.grpcServerSetupFunc = c.setupGRPCServerPrerequisites
 	c.di.checkBootstrapSizeFunc = c.checkBootstrapSize
 	c.di.sendRPCFunc = c.sendRPC
 	c.raftMetricPrefix = scalezillaAppName
