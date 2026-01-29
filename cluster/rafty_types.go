@@ -65,4 +65,5 @@ type raftyServer interface {
 	Stop()
 	IsBootstrapped() bool
 	SubmitCommand(timeout time.Duration, logKind rafty.LogKind, command []byte) ([]byte, error)
+	BootstrapCluster(timeout time.Duration) error
 }
