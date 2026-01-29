@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestCluster_api_handlers(t *testing.T) {
+func TestCluster_api_handlers_health(t *testing.T) {
 	assert := assert.New(t)
 
 	t.Run("health", func(t *testing.T) {
@@ -35,9 +35,9 @@ func TestCluster_api_handlers(t *testing.T) {
 		}
 
 		for _, tc := range tests {
-			w := makeHTTPRequestRecorder(router, tc.method, tc.uri, nil)
+			w := makeHTTPRequestRecorder(router, tc.method, tc.uri, nil, "")
 
-			assert.Equal(200, w.Code, "Failed to perform http GET request")
+			assert.Equal(tc.expectedStatusCode, w.Code, "Failed to perform http GET request")
 			assert.Contains(w.Body.String(), tc.expectedBody, "Failed to get right body content")
 		}
 	})
