@@ -3,7 +3,6 @@ package cluster
 import (
 	"context"
 	"errors"
-	"fmt"
 	"net"
 	"os"
 	"testing"
@@ -151,7 +150,6 @@ func TestCluster_grpc_server(t *testing.T) {
 
 				case _, ok := <-cluster.rpcServicePortsDiscoveryChanResp:
 					if ok {
-						fmt.Println("receive rpc")
 						cluster.bootstrapExpectedSize.Add(1)
 					}
 				}
