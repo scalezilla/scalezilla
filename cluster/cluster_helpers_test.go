@@ -1,11 +1,13 @@
 package cluster
 
 import (
+	"bytes"
 	"fmt"
 	"log"
 	"math/rand"
 	"net/http"
 	"net/http/httptest"
+	"strconv"
 	"testing"
 	"time"
 
@@ -331,8 +333,14 @@ func makeRandomInt(min int, max int) int {
 	return min + r.Intn(max-min)
 }
 
-func makeHTTPRequestRecorder(h http.Handler, method, uri string, header map[string]string) *httptest.ResponseRecorder {
-	req, _ := http.NewRequest(method, uri, nil)
+func makeHTTPRequestRecorder(h http.Handler, method, uri string, header map[string]string, payload string) *httptest.ResponseRecorder {
+	var req *http.Request
+	if payload == "" {
+		req, _ = http.NewRequest(method, uri, nil)
+	} else {
+		req, _ = http.NewRequest(method, uri, bytes.NewBuffer([]byte(payload)))
+		req.Header.Add("Content-Length", strconv.Itoa(len(payload)))
+	}
 	if len(header) > 0 {
 		for k, v := range header {
 			req.Header.Add(k, v)
