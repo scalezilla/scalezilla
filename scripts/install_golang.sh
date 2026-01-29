@@ -1,6 +1,6 @@
 #!/bin/bash
 
-GO_VERSION=1.25.4
+GO_VERSION=1.25.6
 OS=$(uname -s | tr -s "A-Z" "a-z")
 OS_ARCH=$(uname -m)
 if [[ "${OS}" == "linux" ]]
