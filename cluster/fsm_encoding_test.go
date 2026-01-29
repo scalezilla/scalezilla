@@ -20,6 +20,7 @@ func TestCluster_fsm_encoding(t *testing.T) {
 		err := aclTokenEncodeCommand(cmd, buffer)
 		assert.Nil(err)
 		z, err := decodeCommand(buffer.Bytes())
+		assert.Nil(err)
 		assert.Equal(cmd.Kind, z)
 	})
 

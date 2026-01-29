@@ -5,9 +5,13 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestCluster_api_calls_command(t *testing.T) {
+	assert := assert.New(t)
+
 	t.Run("status", func(t *testing.T) {
 		tests := []struct {
 			makeError  bool
@@ -29,10 +33,12 @@ func TestCluster_api_calls_command(t *testing.T) {
 			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				w.WriteHeader(tc.statusCode)
 				if tc.makeError {
-					fmt.Fprintln(w, tc.response)
+					_, err := fmt.Fprintln(w, tc.response)
+					assert.Nil(err)
 					return
 				}
-				fmt.Fprintln(w, tc.response)
+				_, err := fmt.Fprintln(w, tc.response)
+				assert.Nil(err)
 			}))
 			defer server.Close()
 
@@ -72,10 +78,12 @@ func TestCluster_api_calls_command(t *testing.T) {
 			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				w.WriteHeader(tc.statusCode)
 				if tc.makeError {
-					fmt.Fprintln(w, tc.response)
+					_, err := fmt.Fprintln(w, tc.response)
+					assert.Nil(err)
 					return
 				}
-				fmt.Fprintln(w, tc.response)
+				_, err := fmt.Fprintln(w, tc.response)
+				assert.Nil(err)
 			}))
 			defer server.Close()
 
