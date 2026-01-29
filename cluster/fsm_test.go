@@ -194,7 +194,7 @@ func TestCluster_fsm_x(t *testing.T) {
 			Token:      "b",
 		}
 		buffer := new(bytes.Buffer)
-		err = aclTokenEncodeCommand(cmd, buffer)
+		assert.Nil(aclTokenEncodeCommand(cmd, buffer))
 
 		entry := &rafty.LogEntry{
 			Term:    1,
@@ -222,7 +222,7 @@ func TestCluster_fsm_x(t *testing.T) {
 			Token:      "b",
 		}
 		buffer := new(bytes.Buffer)
-		err = aclTokenEncodeCommand(cmd, buffer)
+		assert.Nil(aclTokenEncodeCommand(cmd, buffer))
 
 		entry := &rafty.LogEntry{
 			Term:    1,

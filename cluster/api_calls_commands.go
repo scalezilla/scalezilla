@@ -19,7 +19,9 @@ func APICallsBootstrapStatus(config ClusterHTTPCallBaseConfig) {
 		fmt.Println(err.Error())
 		return
 	}
-	defer resp.Body.Close()
+	defer func() {
+		_ = resp.Body.Close()
+	}()
 	body, _ := io.ReadAll(resp.Body)
 
 	fmt.Println(string(body))
@@ -42,7 +44,9 @@ func APICallsBootstrapCluster(config BootstrapClusterHTTPConfig) {
 		fmt.Println(err.Error())
 		return
 	}
-	defer resp.Body.Close()
+	defer func() {
+		_ = resp.Body.Close()
+	}()
 	body, _ := io.ReadAll(resp.Body)
 
 	fmt.Println(string(body))
