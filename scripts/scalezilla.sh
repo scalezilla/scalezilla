@@ -13,6 +13,7 @@ shift
 
 cd /home/vagrant/scalezilla
 go mod download
-pgrep go && kill $(pgrep go) && sleep 2
+pgrep go && kill $(pgrep -f "main agent") && sleep 2
+rm -rf /var/lib/scalezilla
 nohup go run main.go agent config -f cluster/testdata/config/${CONFIG} &> /tmp/scalezilla.log &
 
