@@ -13,14 +13,6 @@ func TestCluster_api_handlers_bootstrap(t *testing.T) {
 	assert := assert.New(t)
 
 	t.Run("bootstrap", func(t *testing.T) {
-		cfg := basicClusterConfig{randomPort: false, dev: true}
-		cluster := makeBasicCluster(cfg)
-		defer func() {
-			_ = os.RemoveAll(cluster.config.DataDir)
-		}()
-		mock := mockRafty{}
-		cluster.rafty = &mock
-
 		tests := []struct {
 			method                string
 			uri                   string
@@ -30,7 +22,8 @@ func TestCluster_api_handlers_bootstrap(t *testing.T) {
 			bootstrapped          bool
 			header                map[string]string
 			body                  string
-			errorOnSubmit         bool
+			errorSubmitCommand    bool
+			errorBootstrapCluster bool
 		}{
 			{
 				method:             "GET",
@@ -95,14 +88,35 @@ func TestCluster_api_handlers_bootstrap(t *testing.T) {
 				header: map[string]string{
 					"Content-Type": "application/json",
 				},
-				body:          `{}`,
-				errorOnSubmit: true,
+				body:                  `{}`,
+				errorBootstrapCluster: true,
+			},
+			{
+				method:             "POST",
+				uri:                "/api/v1/cluster/bootstrap/cluster",
+				expectedStatusCode: 500,
+				expectedBody:       `{"error":"`,
+				header: map[string]string{
+					"Content-Type": "application/json",
+				},
+				body:               `{}`,
+				errorSubmitCommand: true,
 			},
 		}
 
 		for _, tc := range tests {
+			cfg := basicClusterConfig{randomPort: false, dev: true}
+			cluster := makeBasicCluster(cfg)
+			defer func() {
+				_ = os.RemoveAll(cluster.config.DataDir)
+			}()
+			mock := mockRafty{}
+			cluster.rafty = &mock
 			mock.bootstrapped = tc.bootstrapped
-			if tc.errorOnSubmit {
+			if tc.errorBootstrapCluster {
+				mock.errBootstrap = errors.New("bootstrap error")
+			}
+			if tc.errorSubmitCommand {
 				mock.err = errors.New("submit error")
 			}
 			router := cluster.newApiRouters()

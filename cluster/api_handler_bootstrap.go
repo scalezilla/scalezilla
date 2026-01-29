@@ -2,6 +2,7 @@ package cluster
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -32,12 +33,20 @@ func (cc *Cluster) bootstrapCluster(c *gin.Context) {
 	} else {
 		tok = req.Token
 	}
+
+	if err := cc.rafty.BootstrapCluster(2 * time.Second); err != nil {
+		cc.logger.Error().Err(err).Str("component", "bootstrap").Msgf("bootstrap error")
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
 	z := &AclToken{
 		AccessorID:   uuid.NewString(),
 		Token:        tok,
 		InitialToken: true,
 	}
-	if err := cc.submitCommandACLTokenWrite(aclTokenCommandSet, z); err != nil {
+	if err := cc.submitCommandACLTokenWrite(5*time.Second, aclTokenCommandSet, z); err != nil {
+		cc.logger.Error().Err(err).Str("component", "bootstrap").Msgf("submit acl token command err")
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
