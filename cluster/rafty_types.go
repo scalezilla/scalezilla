@@ -1,6 +1,10 @@
 package cluster
 
-import "github.com/Lord-Y/rafty"
+import (
+	"time"
+
+	"github.com/Lord-Y/rafty"
+)
 
 // raftyStore is an interface implements Rafty requirements.
 // This will be useful during unit testing
@@ -59,4 +63,6 @@ type raftyStore interface {
 type raftyServer interface {
 	Start() error
 	Stop()
+	IsBootstrapped() bool
+	SubmitCommand(timeout time.Duration, logKind rafty.LogKind, command []byte) ([]byte, error)
 }

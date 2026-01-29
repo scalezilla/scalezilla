@@ -10,7 +10,7 @@ import (
 // newAPIServer will build the api server config
 func (c *Cluster) newAPIServer() {
 	c.apiServer = &http.Server{
-		Addr:    fmt.Sprintf(":%d", c.config.HTTPPort),
+		Addr:    fmt.Sprintf("%s:%d", c.config.BindAddress, c.config.HTTPPort),
 		Handler: c.newApiRouters(),
 	}
 }

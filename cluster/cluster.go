@@ -42,6 +42,8 @@ func NewCluster(config ClusterInitialConfig) (*Cluster, error) {
 	c.di.checkBootstrapSizeFunc = c.checkBootstrapSize
 	c.di.sendRPCFunc = c.sendRPC
 	c.raftMetricPrefix = scalezillaAppName
+	c.di.aclTokenEncodeCommandFunc = aclTokenEncodeCommand
+	c.di.sendRPCFunc = c.sendRPC
 
 	c.buildDataDir()
 	if config.Dev {

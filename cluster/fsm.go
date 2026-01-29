@@ -16,7 +16,8 @@ func newFSM(logStore rafty.LogStore) *fsmState {
 	fsm := &fsmState{
 		logStore: logStore,
 		memoryStore: memoryStore{
-			logs: make(map[uint64]*rafty.LogEntry),
+			logs:     make(map[uint64]*rafty.LogEntry),
+			aclToken: make(map[string]dataACLToken),
 		},
 	}
 
@@ -94,5 +95,16 @@ func (f *fsmState) ApplyCommand(log *rafty.LogEntry) ([]byte, error) {
 		return f.memoryStoreLogsApplyCommandFunc(log)
 	}
 
-	return nil, nil
+	kind, err := decodeCommand(log.Command)
+	if err != nil {
+		return nil, err
+	}
+
+	switch kind {
+	case aclTokenCommandGet, aclTokenCommandSet, aclTokenCommandDelete:
+		return f.aclTokenApplyCommand(log)
+
+	default:
+		return nil, nil
+	}
 }
