@@ -26,7 +26,7 @@ func (c *Cluster) buildAddressAndID() {
 		Port: int(c.config.RaftGRPCPort),
 	}
 
-	c.id = fmt.Sprintf("%d", c.raftyAddress.Port)
+	c.id = fmt.Sprintf("%s", c.config.HostIPAddress)
 }
 
 // buildPeers will build the initial peer members of the cluster
