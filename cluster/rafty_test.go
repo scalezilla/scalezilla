@@ -51,6 +51,8 @@ func TestCluster_rafty(t *testing.T) {
 		cluster.raftMetricPrefix = "new_rafty_success_non_voter"
 		_, err := cluster.newRafty()
 		assert.Nil(err)
+		err = cluster.raftyStoreClose()
+		assert.Nil(err)
 	})
 
 	t.Run("start_failure", func(t *testing.T) {
@@ -92,5 +94,14 @@ func TestCluster_rafty(t *testing.T) {
 			cluster.stopRafty()
 		}()
 		assert.Nil(cluster.startRafty())
+	})
+
+	t.Run("built_store_error", func(t *testing.T) {
+		cfg := basicClusterConfig{randomPort: false, dev: true}
+		cluster := makeBasicCluster(cfg)
+		cluster.raftMetricPrefix = "built_store_error"
+		cluster.config.DataDir = ""
+		_, err := cluster.newRafty()
+		assert.Error(err)
 	})
 }
