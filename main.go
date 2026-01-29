@@ -21,6 +21,7 @@ func main() {
 		EnableShellCompletion: true,
 		Commands: []*cli.Command{
 			commands.Agent(),
+			commands.Bootstrap(),
 		},
 	}
 

@@ -18,6 +18,9 @@ func (c *Cluster) newApiRouters() *gin.Engine {
 	{
 		v1.GET("/cluster/health", c.health)
 		v1.GET("/cluster/healthz", c.healthz)
+
+		v1.GET("/cluster/bootstrap/status", c.bootstapStatus)
+		v1.POST("/cluster/bootstrap/cluster", c.bootstrapCluster)
 	}
 	return router
 }

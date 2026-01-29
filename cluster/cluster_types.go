@@ -2,6 +2,7 @@ package cluster
 
 import (
 	"context"
+	"io"
 	"net"
 	"sync"
 	"sync/atomic"
@@ -166,9 +167,6 @@ type Cluster struct {
 	// systemInfo holds os discovery requirements
 	systemInfo *osdiscovery.SystemInfo
 
-	// // checkSystemInfoFunc is used as a dependency injection
-	// checkSystemInfoFunc func() error
-
 	// isRunning is a helper indicating is the node is up or down.
 	// It set to false, it will reject all incoming grpc requests
 	// with shutting down error
@@ -246,6 +244,9 @@ type dependencyInjections struct {
 
 	// sendRPCFunc is used as a dependency injection
 	sendRPCFunc func(address string, client scalezillapb.ScalezillaClient, request RPCRequest)
+
+	// aclTokenEncodeCommandFunc is used as a dependency injection
+	aclTokenEncodeCommandFunc func(cmd aclTokenCommand, w io.Writer) error
 }
 
 // httpServer is an interface implements http.Server requirements.
