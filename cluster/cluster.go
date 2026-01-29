@@ -67,11 +67,11 @@ func (c *Cluster) Start() error {
 		return err
 	}
 
-	if c.rafty, err = c.di.newRaftyFunc(); err != nil {
+	if err := c.di.startGRPCServerFunc(); err != nil {
 		return err
 	}
 
-	if err := c.di.startGRPCServerFunc(); err != nil {
+	if c.rafty, err = c.di.newRaftyFunc(); err != nil {
 		return err
 	}
 

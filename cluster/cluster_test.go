@@ -61,8 +61,11 @@ func TestCluster_init(t *testing.T) {
 	t.Run("start_new_rafty_error", func(t *testing.T) {
 		cfg := basicClusterConfig{randomPort: true, dev: true}
 		cluster := makeBasicCluster(cfg)
+		sigCtx, stop := BuildSignal(context.Background())
+		cluster.ctx = sigCtx
 		defer func() {
 			_ = os.RemoveAll(cluster.config.DataDir)
+			stop()
 		}()
 
 		cluster.di.checkSystemInfoFunc = func() error {
