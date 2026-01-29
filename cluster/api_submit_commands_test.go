@@ -5,6 +5,7 @@ import (
 	"io"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -28,7 +29,7 @@ func TestCLuster_api_submit_commands(t *testing.T) {
 		mock := mockRafty{}
 		cluster.rafty = &mock
 
-		assert.Nil(cluster.submitCommandACLTokenWrite(aclTokenCommandSet, token))
+		assert.Nil(cluster.submitCommandACLTokenWrite(time.Second, aclTokenCommandSet, token))
 		assert.Equal(true, mock.called)
 	})
 
@@ -49,7 +50,7 @@ func TestCLuster_api_submit_commands(t *testing.T) {
 		cluster.di.aclTokenEncodeCommandFunc = func(cmd aclTokenCommand, w io.Writer) error {
 			return errors.New("acl encode commnd error")
 		}
-		assert.Error(cluster.submitCommandACLTokenWrite(aclTokenCommandSet, token))
+		assert.Error(cluster.submitCommandACLTokenWrite(time.Second, aclTokenCommandSet, token))
 
 		mock := mockRafty{
 			err: errors.New("rafty submit command error"),
@@ -58,7 +59,7 @@ func TestCLuster_api_submit_commands(t *testing.T) {
 
 		cluster.di.aclTokenEncodeCommandFunc = aclTokenEncodeCommand
 
-		assert.Error(cluster.submitCommandACLTokenWrite(aclTokenCommandSet, token))
+		assert.Error(cluster.submitCommandACLTokenWrite(time.Second, aclTokenCommandSet, token))
 		assert.Equal(true, mock.called)
 	})
 }

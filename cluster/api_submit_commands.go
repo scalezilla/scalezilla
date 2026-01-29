@@ -8,7 +8,7 @@ import (
 )
 
 // submitCommandACLTokenWrite will send a write command to the leader
-func (c *Cluster) submitCommandACLTokenWrite(kind commandKind, data *AclToken) error {
+func (c *Cluster) submitCommandACLTokenWrite(timeout time.Duration, kind commandKind, data *AclToken) error {
 	buffer := new(bytes.Buffer)
 	cmd := aclTokenCommand{
 		Kind:         kind,
@@ -21,7 +21,7 @@ func (c *Cluster) submitCommandACLTokenWrite(kind commandKind, data *AclToken) e
 		return err
 	}
 
-	if _, err := c.rafty.SubmitCommand(time.Second, rafty.LogReplication, buffer.Bytes()); err != nil {
+	if _, err := c.rafty.SubmitCommand(timeout, rafty.LogReplication, buffer.Bytes()); err != nil {
 		return err
 	}
 	return nil
