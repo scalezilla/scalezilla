@@ -2,7 +2,8 @@
 
 #dnf update -yq
 dnf install -yq vim wget git nc \
-  bind-utils net-tools traceroute jq gcc
+  bind-utils net-tools traceroute jq gcc \
+  uuid-runtime
 
 # set default shell to bash
 which chsh || dnf install -yq util-linux-user

@@ -8,4 +8,4 @@ apt update -yqq
 apt install -yqq --no-install-recommends \
   vim curl wget git netcat-openbsd \
   rsync tcpdump dnsutils net-tools traceroute jq ripgrep \
-  build-essential gcc less
+  build-essential gcc less uuid-runtime
