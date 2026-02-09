@@ -11,9 +11,11 @@ else
 fi
 shift
 
-cd /home/vagrant/scalezilla
+SCALEZILLA_HOME_DIR=/home/vagrant/scalezilla
+cd ${SCALEZILLA_HOME_DIR}
 go mod download
 pgrep go && kill $(pgrep -f "main agent") && sleep 2
 rm -rf /var/lib/scalezilla
-nohup go run main.go agent config -f cluster/testdata/config/${CONFIG} &> /tmp/scalezilla.log &
+export SCALEZILLA_LOG_LEVEL=trace
+nohup go run main.go agent config -f ${SCALEZILLA_HOME_DIR}/cluster/testdata/config/${CONFIG} &> /tmp/scalezilla.log &
 
