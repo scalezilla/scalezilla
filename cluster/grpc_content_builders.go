@@ -1,6 +1,8 @@
 package cluster
 
-import "github.com/scalezilla/scalezilla/scalezillapb"
+import (
+	"github.com/scalezilla/scalezilla/scalezillapb"
+)
 
 // makeServicePortsDiscoveryRequest build request for that matter
 func makeServicePortsDiscoveryRequest(data RPCServicePortsDiscoveryRequest) *scalezillapb.ServicePortsDiscoveryRequestReply {
@@ -28,5 +30,56 @@ func makeServicePortsDiscoveryResponse(data *scalezillapb.ServicePortsDiscoveryR
 		PortRaft: data.PortRaft,
 		IsVoter:  data.IsVoter,
 		NodePool: data.NodePool,
+	}
+}
+
+// makeServiceNodePollingRequest build request for that matter
+func makeServiceNodePollingRequest(data RPCServiceNodePollingRequest) *scalezillapb.ServiceNodePollingRequestReply {
+	return &scalezillapb.ServiceNodePollingRequestReply{
+		Address:                data.Address,
+		Id:                     data.ID,
+		OsName:                 data.OsName,
+		OsVendor:               data.OsVendor,
+		OsVersion:              data.OsVersion,
+		OsFamily:               data.OsFamily,
+		OsHostname:             data.OsHostname,
+		OsArchitecture:         data.OsArchitecture,
+		OsType:                 data.OsType,
+		CpuTotal:               data.CpuTotal,
+		CpuCores:               data.CpuCores,
+		CpuFrequency:           data.CpuFrequency,
+		CpuCumulativeFrequency: data.CpuCumulativeFrequency,
+		CpuCapabilitites:       data.CpuCapabilitites,
+		CpuVendor:              data.CpuVendor,
+		CpuModel:               data.CpuModel,
+		MemoryTotal:            uint64(data.MemoryTotal),
+		MemoryAvailable:        uint64(data.MemoryAvailable),
+	}
+}
+
+// makeServicePortsDiscoveryResponse build response for that matter
+func makeServiceNodePollingResponse(data *scalezillapb.ServiceNodePollingRequestReply) RPCServiceNodePollingResponse {
+	if data == nil {
+		return RPCServiceNodePollingResponse{}
+	}
+	return RPCServiceNodePollingResponse{
+		Address:                data.Address,
+		ID:                     data.Id,
+		OsName:                 data.OsName,
+		OsVendor:               data.OsVendor,
+		OsVersion:              data.OsVersion,
+		OsFamily:               data.OsFamily,
+		OsHostname:             data.OsHostname,
+		OsArchitecture:         data.OsArchitecture,
+		OsType:                 data.OsType,
+		CpuTotal:               data.CpuTotal,
+		CpuCores:               data.CpuCores,
+		CpuFrequency:           data.CpuFrequency,
+		CpuCumulativeFrequency: data.CpuCumulativeFrequency,
+		CpuCapabilitites:       data.CpuCapabilitites,
+		CpuVendor:              data.CpuVendor,
+		CpuModel:               data.CpuModel,
+		MemoryTotal:            uint64(data.MemoryTotal),
+		MemoryAvailable:        uint64(data.MemoryAvailable),
 	}
 }

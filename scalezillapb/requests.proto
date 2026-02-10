@@ -23,6 +23,33 @@ message ServicePortsDiscoveryRequestReply {
   string node_pool = 7;
 }
 
+message ServiceNodePollingRequestReply {
+  string address         = 1;
+  string id              = 2;
+
+  string os_name         = 3;
+  string os_vendor       = 4;
+  string os_version      = 5;
+  string os_family       = 6;
+  string os_hostname     = 7;
+  string os_architecture = 8;
+  string os_type         = 9;
+
+  uint32 cpu_total                  = 10;
+  uint32 cpu_cores                  = 11;
+  float  cpu_frequency              = 12;
+  double cpu_cumulative_frequency   = 13;
+  repeated string cpu_capabilitites = 14;
+  string cpu_vendor                 = 15;
+  string cpu_model                  = 16;
+
+  uint64 memory_total               = 17;
+  uint64 memory_available           = 18;
+
+  map<string, string> metadata      = 19;
+}
+
 service Scalezilla {
   rpc ServicePortsDiscovery(ServicePortsDiscoveryRequestReply) returns (ServicePortsDiscoveryRequestReply) {}
+  rpc ServiceNodePolling(ServiceNodePollingRequestReply) returns (ServiceNodePollingRequestReply) {}
 }
