@@ -53,12 +53,14 @@ Vagrant.configure("2") do |config|
 
   0.upto(MACHINES['server'][:count]) do |index|
     id = "#{11 + index}"
+    server_ssh_port = 2230 + index
     server_name = "server#{id}"
     ip = "192.168.200.#{id}"
     config.vm.define "#{server_name}" do |srv|
       srv.vm.box = "#{DEBIAN_IMAGE}"
       srv.vm.hostname = "#{server_name}"
       srv.vm.network "private_network", ip: "#{ip}"
+      srv.vm.network "forwarded_port", guest: 22, host: "#{server_ssh_port}", id: "ssh"
       srv.vm.provider "virtualbox" do |vb|
         vb.memory = MACHINES['server'][:memory]
         vb.cpus   = MACHINES['server'][:cpus]
@@ -74,12 +76,14 @@ Vagrant.configure("2") do |config|
 
   0.upto(MACHINES['client_debian'][:count]) do |index|
     id = "#{20 + index}"
+    server_ssh_port = 2240 + index
     server_name = "client#{id}"
     ip = "192.168.200.#{id}"
     config.vm.define "#{server_name}" do |srv|
       srv.vm.box = "#{DEBIAN_IMAGE}"
       srv.vm.hostname = "#{server_name}"
       srv.vm.network "private_network", ip: "#{ip}"
+      srv.vm.network "forwarded_port", guest: 22, host: "#{server_ssh_port}", id: "ssh"
       srv.vm.provider "virtualbox" do |vb|
         vb.memory = MACHINES['client_debian'][:memory]
         vb.cpus   = MACHINES['client_debian'][:cpus]
@@ -95,12 +99,14 @@ Vagrant.configure("2") do |config|
 
 #  0.upto(MACHINES['client_redhat'][:count]) do |index|
 #    id = "#{25 + index}"
+#    server_ssh_port = 2250 + index
 #    server_name = "client#{id}"
 #    ip = "192.168.200.#{id}"
 #    config.vm.define "#{server_name}" do |srv|
 #      srv.vm.box = "#{REDHAT_IMAGE}"
 #      srv.vm.hostname = "#{server_name}"
 #      srv.vm.network "private_network", ip: "#{ip}"
+#      srv.vm.network "forwarded_port", guest: 22, host: "#{server_ssh_port}", id: "ssh"
 #      srv.vm.provider "virtualbox" do |vb|
 #        vb.memory = MACHINES['client_redhat'][:memory]
 #        vb.cpus   = MACHINES['client_redhat'][:cpus]
