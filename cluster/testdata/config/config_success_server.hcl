@@ -1,3 +1,5 @@
+host_ip_address = "127.0.0.10"
+
 server {
   enabled = true
 
@@ -6,7 +8,7 @@ server {
   }
 
   cluster_join {
-    initial_members = ["127.0.0.2", "127.0.0.3"]
+    initial_members = ["127.0.0.11", "127.0.0.12"]
   }
 }
 
