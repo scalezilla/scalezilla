@@ -1,4 +1,5 @@
 host_ip_address = "127.0.0.10"
+bind_address    = "127.0.0.10"
 
 server {
   enabled = true
