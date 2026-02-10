@@ -54,6 +54,7 @@ func makeServiceNodePollingRequest(data RPCServiceNodePollingRequest) *scalezill
 		CpuModel:               data.CpuModel,
 		MemoryTotal:            uint64(data.MemoryTotal),
 		MemoryAvailable:        uint64(data.MemoryAvailable),
+		Metadata:               data.Metadata,
 	}
 }
 
@@ -81,5 +82,6 @@ func makeServiceNodePollingResponse(data *scalezillapb.ServiceNodePollingRequest
 		CpuModel:               data.CpuModel,
 		MemoryTotal:            uint64(data.MemoryTotal),
 		MemoryAvailable:        uint64(data.MemoryAvailable),
+		Metadata:               data.Metadata,
 	}
 }
