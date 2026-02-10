@@ -1,6 +1,11 @@
 hostname        = "server11"
 host_ip_address = "192.168.200.11"
 
+metadata = {
+  region = "test"
+  zone   = "test"
+}
+
 server {
   enabled = true
 

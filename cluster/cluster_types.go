@@ -301,6 +301,9 @@ type Config struct {
 	// GRPCPort is the port for internal cluster purpose
 	GRPCPort uint16 `hcl:"grpc_port,optional"`
 
+	// Metadata is the ip address to use by the cluster
+	Metadata map[string]string `hcl:"metadata,optional"`
+
 	// Server holds controle plane config
 	Server *Server `hcl:"server,block"`
 
