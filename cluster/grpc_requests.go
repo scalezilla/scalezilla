@@ -88,6 +88,7 @@ func (c *Cluster) reqServiceNodePolling() {
 			CpuModel:               c.systemInfo.CPU.Model,
 			MemoryTotal:            uint64(c.systemInfo.Memory.Total),
 			MemoryAvailable:        uint64(c.systemInfo.Memory.Available),
+			Metadata:               c.config.Metadata,
 		},
 		Timeout:      time.Second,
 		ResponseChan: c.rpcServiceNodePollingChanResp,
