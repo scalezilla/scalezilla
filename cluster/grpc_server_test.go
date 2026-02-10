@@ -80,6 +80,7 @@ func TestCluster_grpc_server(t *testing.T) {
 		cluster := makeBasicCluster(cfg)
 		cluster.dev = true
 		cluster.checkBootstrapSize()
+		_ = os.RemoveAll(cluster.config.DataDir)
 	})
 
 	t.Run("check_bootstrap_size_context_done", func(t *testing.T) {
@@ -87,6 +88,9 @@ func TestCluster_grpc_server(t *testing.T) {
 		cluster := clusters[0]
 		ctx, cancel := context.WithCancel(context.Background())
 		cluster.ctx = ctx
+		defer func() {
+			_ = os.RemoveAll(cluster.config.DataDir)
+		}()
 		cancel()
 		go cluster.checkBootstrapSize()
 		cluster.wg.Wait()
@@ -98,6 +102,9 @@ func TestCluster_grpc_server(t *testing.T) {
 		ctx, cancel := context.WithCancel(context.Background())
 		cluster.ctx = ctx
 		cluster.checkBootstrapSizeDuration = 500 * time.Millisecond
+		defer func() {
+			_ = os.RemoveAll(cluster.config.DataDir)
+		}()
 
 		cluster.wg.Go(func() {
 			for {
@@ -126,12 +133,52 @@ func TestCluster_grpc_server(t *testing.T) {
 		cluster.wg.Wait()
 	})
 
+	t.Run("client_contacted_server", func(t *testing.T) {
+		clusters := makeSizedCluster(sizedClusterConfig{clientSize: 1})
+		cluster := clusters[len(clusters)-1]
+		ctx, cancel := context.WithCancel(context.Background())
+		cluster.ctx = ctx
+		cluster.checkBootstrapSizeDuration = 500 * time.Millisecond
+		defer func() {
+			_ = os.RemoveAll(cluster.config.DataDir)
+		}()
+
+		cluster.wg.Go(func() {
+			for {
+				select {
+				case <-cluster.ctx.Done():
+					return
+
+				case data, ok := <-cluster.rpcServicePortsDiscoveryChanReq:
+					if ok {
+						cluster.rcvServicePortsDiscovery(data)
+					}
+
+				case _, ok := <-cluster.rpcServicePortsDiscoveryChanResp:
+					if ok {
+						cluster.clientContactedServer.Store(true)
+					}
+				}
+			}
+		})
+
+		go cluster.checkBootstrapSize()
+		go func() {
+			time.Sleep(2 * time.Second)
+			cancel()
+		}()
+		cluster.wg.Wait()
+	})
+
 	t.Run("check_bootstrap_size_timer_retry", func(t *testing.T) {
 		clusters := makeSizedCluster(sizedClusterConfig{})
 		cluster := clusters[0]
 		ctx, cancel := context.WithCancel(context.Background())
 		cluster.ctx = ctx
 		cluster.checkBootstrapSizeDuration = 100 * time.Millisecond
+		defer func() {
+			_ = os.RemoveAll(cluster.config.DataDir)
+		}()
 		cluster.di.sendRPCFunc = func(address string, client scalezillapb.ScalezillaClient, request RPCRequest) {
 			time.Sleep(600 * time.Millisecond)
 			cluster.rpcServicePortsDiscoveryChanResp <- RPCResponse{}

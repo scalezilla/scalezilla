@@ -10,7 +10,12 @@ func (c *Cluster) rcvServicePortsDiscovery(data RPCRequest) {
 	request := data.Request.(*scalezillapb.ServicePortsDiscoveryRequestReply)
 	c.nodeMapMu.Lock()
 	if _, ok := c.nodeMap[request.Id]; !ok {
-		c.bootstrapExpectedSize.Add(1)
+		if c.isVoter && !c.bootstrapExpectedSizeReach.Load() {
+			c.bootstrapExpectedSize.Add(1)
+		}
+		if !c.isVoter {
+			c.clientContactedServer.Store(true)
+		}
 		c.nodeMap[request.Id] = &nodeMap{
 			Address:   request.Address,
 			ID:        request.Id,

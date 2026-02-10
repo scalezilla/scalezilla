@@ -74,7 +74,7 @@ func (c *Cluster) getClient(address string) scalezillapb.ScalezillaClient {
 // checkBootstrapSize will wait to get the expected bootstrap
 // size by sending ServicePortsDiscovery requests
 func (c *Cluster) checkBootstrapSize() {
-	if c.dev || !c.isVoter {
+	if c.dev {
 		return
 	}
 
@@ -88,6 +88,9 @@ func (c *Cluster) checkBootstrapSize() {
 			return
 
 		case <-timer.C:
+			if !c.isVoter && c.clientContactedServer.Load() {
+				return
+			}
 			if c.bootstrapExpectedSize.Load()+1 >= c.config.Server.Raft.BootstrapExpectedSize {
 				c.logger.Info().Msgf("Service port discovery size reached %d", c.bootstrapExpectedSize.Load())
 				c.bootstrapExpectedSizeReach.Store(true)

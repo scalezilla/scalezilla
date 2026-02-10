@@ -203,6 +203,7 @@ func makeSizedCluster(cfg sizedClusterConfig) (cluster []*Cluster) {
 
 		// unset dev requirements
 		z.dev = false
+		z.isVoter = false
 		z.members = voters
 
 		nodePool := defaultNodePool
