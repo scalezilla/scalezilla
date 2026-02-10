@@ -88,7 +88,7 @@ func (c *Cluster) checkBootstrapSize() {
 			return
 
 		case <-timer.C:
-			if c.bootstrapExpectedSize.Load()+1 == c.config.Server.Raft.BootstrapExpectedSize {
+			if c.bootstrapExpectedSize.Load()+1 >= c.config.Server.Raft.BootstrapExpectedSize {
 				c.logger.Info().Msgf("Service port discovery size reached %d", c.bootstrapExpectedSize.Load())
 				c.bootstrapExpectedSizeReach.Store(true)
 				return
