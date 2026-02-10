@@ -183,6 +183,9 @@ type Cluster struct {
 	// nodeMap is a map of all nodes in the cluster
 	nodeMap map[string]*nodeMap
 
+	// nodeMapMu is used to ensure lock concurrency
+	nodeMapMu sync.Mutex
+
 	// connectionManager holds connections for all nodes
 	connectionManager connectionManager
 
@@ -194,10 +197,22 @@ type Cluster struct {
 	// answers sent by actual node
 	rpcServicePortsDiscoveryChanResp chan RPCResponse
 
+	// rpcServiceNodePollingChanReq is used by the grpc
+	// receiver to respond back to the caller
+	rpcServiceNodePollingChanReq chan RPCRequest
+
+	// rpcServiceNodePollingChanResp is used to receive
+	// answers sent by actual node
+	rpcServiceNodePollingChanResp chan RPCResponse
+
 	// checkBootstrapSizeDuration is the frequency at which
 	// to make rpc calls to other nodes to satisfy
 	// bootstrapExpectedSize variable
 	checkBootstrapSizeDuration time.Duration
+
+	// nodePollingTimer is the frequency at which the node
+	// will send node polling rpc request to other nodes
+	nodePollingTimer time.Duration
 }
 
 // dependencyInjections is a struct holding all
@@ -390,6 +405,12 @@ type nodeMap struct {
 
 	// NodePool is the node pool of the node
 	NodePool string
+
+	// SystemInfo holds os discovery requirements
+	SystemInfo osdiscovery.SystemInfo
+
+	// Metadata holds node metadata
+	Metadata map[string]string
 }
 
 // connectionManager is used to manage all grpc connections nodes

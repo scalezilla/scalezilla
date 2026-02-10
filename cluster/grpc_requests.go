@@ -27,6 +27,14 @@ func (c *Cluster) sendRPC(address string, client scalezillapb.ScalezillaClient, 
 			options...,
 		)
 		request.ResponseChan <- RPCResponse{Response: makeServicePortsDiscoveryResponse(resp), Error: err, TargetNode: address}
+
+	case ServiceNodePolling:
+		resp, err := client.ServiceNodePolling(
+			ctx,
+			makeServiceNodePollingRequest(request.Request.(RPCServiceNodePollingRequest)),
+			options...,
+		)
+		request.ResponseChan <- RPCResponse{Response: makeServiceNodePollingResponse(resp), Error: err, TargetNode: address}
 	}
 }
 
@@ -35,7 +43,7 @@ func (c *Cluster) reqServicePortsDiscovery() {
 	request := RPCRequest{
 		RPCType: ServicePortsDiscovery,
 		Request: RPCServicePortsDiscoveryRequest{
-			Address:  c.grpcAddress.String(),
+			Address:  c.config.HostIPAddress,
 			ID:       c.id,
 			NodePool: c.nodePool,
 			PortHTTP: uint32(c.config.HTTPPort),
@@ -45,6 +53,44 @@ func (c *Cluster) reqServicePortsDiscovery() {
 		},
 		Timeout:      time.Second,
 		ResponseChan: c.rpcServicePortsDiscoveryChanResp,
+	}
+
+	for _, member := range c.members {
+		go func() {
+			if client := c.getClient(member); client != nil {
+				c.di.sendRPCFunc(member, client, request)
+			}
+		}()
+	}
+}
+
+// reqServiceNodePolling will send a rpc request to other nodes
+func (c *Cluster) reqServiceNodePolling() {
+	_ = c.checkSystemInfo()
+	request := RPCRequest{
+		RPCType: ServiceNodePolling,
+		Request: RPCServiceNodePollingRequest{
+			Address:                c.config.HostIPAddress,
+			ID:                     c.id,
+			OsName:                 c.systemInfo.OS.Name,
+			OsVendor:               c.systemInfo.OS.Vendor,
+			OsVersion:              c.systemInfo.OS.Version,
+			OsFamily:               c.systemInfo.OS.Family,
+			OsHostname:             c.systemInfo.OS.Hostname,
+			OsArchitecture:         c.systemInfo.OS.Architecture,
+			OsType:                 c.systemInfo.OS.OSType,
+			CpuTotal:               c.systemInfo.CPU.CPU,
+			CpuCores:               c.systemInfo.CPU.Cores,
+			CpuFrequency:           c.systemInfo.CPU.Frequency,
+			CpuCumulativeFrequency: c.systemInfo.CPU.CumulativeFrequency,
+			CpuCapabilitites:       c.systemInfo.CPU.Capabilitites,
+			CpuVendor:              c.systemInfo.CPU.Vendor,
+			CpuModel:               c.systemInfo.CPU.Model,
+			MemoryTotal:            uint64(c.systemInfo.Memory.Total),
+			MemoryAvailable:        uint64(c.systemInfo.Memory.Available),
+		},
+		Timeout:      time.Second,
+		ResponseChan: c.rpcServiceNodePollingChanResp,
 	}
 
 	for _, member := range c.members {

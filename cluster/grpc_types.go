@@ -1,6 +1,8 @@
 package cluster
 
-import "time"
+import (
+	"time"
+)
 
 // RPCType is used to build rpc requests
 type RPCType uint8
@@ -8,6 +10,9 @@ type RPCType uint8
 const (
 	// ServicePortsDiscovery will be used to perform service ports discovery
 	ServicePortsDiscovery RPCType = iota
+
+	// ServiceNodePolling will be used to perform service node polling
+	ServiceNodePolling
 )
 
 // RPCRequest is used by chans in order to manage rpc requests
@@ -37,4 +42,32 @@ type RPCServicePortsDiscoveryResponse struct {
 	Address, ID, NodePool        string
 	PortHTTP, PortGRPC, PortRaft uint32
 	IsVoter                      bool
+}
+
+// RPCServiceNodePollingRequest holds the requirements to perform node polling
+type RPCServiceNodePollingRequest struct {
+	Address, ID                           string
+	OsName, OsVendor, OsVersion, OsFamily string
+	OsHostname, OsArchitecture, OsType    string
+	CpuTotal, CpuCores                    uint32
+	CpuFrequency                          float32
+	CpuCumulativeFrequency                float64
+	CpuCapabilitites                      []string
+	CpuVendor, CpuModel                   string
+	MemoryTotal, MemoryAvailable          uint64
+	Metadata                              map[string]string
+}
+
+// RPCServiceNodePollingResponse holds the response from RPCServiceNodePollingRequest
+type RPCServiceNodePollingResponse struct {
+	Address, ID                           string
+	OsName, OsVendor, OsVersion, OsFamily string
+	OsHostname, OsArchitecture, OsType    string
+	CpuTotal, CpuCores                    uint32
+	CpuFrequency                          float32
+	CpuCumulativeFrequency                float64
+	CpuCapabilitites                      []string
+	CpuVendor, CpuModel                   string
+	MemoryTotal, MemoryAvailable          uint64
+	Metadata                              map[string]string
 }

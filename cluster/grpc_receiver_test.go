@@ -2,6 +2,7 @@ package cluster
 
 import (
 	"context"
+	"os"
 	"testing"
 	"time"
 
@@ -17,9 +18,9 @@ func TestCluster_grpc_receiver(t *testing.T) {
 		cluster := makeBasicCluster(cfg)
 		cluster.ctx = context.Background()
 		cluster.buildAddressAndID()
-		// defer func() {
-		// 	_ = os.RemoveAll(cluster.config.DataDir)
-		// }()
+		defer func() {
+			_ = os.RemoveAll(cluster.config.DataDir)
+		}()
 
 		request := &scalezillapb.ServicePortsDiscoveryRequestReply{}
 		ctx, cancel := context.WithCancel(context.Background())
@@ -40,9 +41,9 @@ func TestCluster_grpc_receiver(t *testing.T) {
 		ctx, cancel := context.WithCancel(context.Background())
 		cluster.ctx = ctx
 		cluster.buildAddressAndID()
-		// defer func() {
-		// 	_ = os.RemoveAll(cluster.config.DataDir)
-		// }()
+		defer func() {
+			_ = os.RemoveAll(cluster.config.DataDir)
+		}()
 		request := &scalezillapb.ServicePortsDiscoveryRequestReply{}
 
 		go func() {
@@ -59,9 +60,9 @@ func TestCluster_grpc_receiver(t *testing.T) {
 		cluster := makeBasicCluster(cfg)
 		cluster.ctx = context.Background()
 		cluster.buildAddressAndID()
-		// defer func() {
-		// 	_ = os.RemoveAll(cluster.config.DataDir)
-		// }()
+		defer func() {
+			_ = os.RemoveAll(cluster.config.DataDir)
+		}()
 
 		request := &scalezillapb.ServicePortsDiscoveryRequestReply{}
 
@@ -79,9 +80,9 @@ func TestCluster_grpc_receiver(t *testing.T) {
 		cluster := makeBasicCluster(cfg)
 		cluster.ctx = context.Background()
 		cluster.buildAddressAndID()
-		// defer func() {
-		// 	_ = os.RemoveAll(cluster.config.DataDir)
-		// }()
+		defer func() {
+			_ = os.RemoveAll(cluster.config.DataDir)
+		}()
 
 		request := &scalezillapb.ServicePortsDiscoveryRequestReply{
 			Address:  "12345",
@@ -119,9 +120,9 @@ func TestCluster_grpc_receiver(t *testing.T) {
 		cluster := makeBasicCluster(cfg)
 		cluster.ctx = context.Background()
 		cluster.buildAddressAndID()
-		// defer func() {
-		// 	_ = os.RemoveAll(cluster.config.DataDir)
-		// }()
+		defer func() {
+			_ = os.RemoveAll(cluster.config.DataDir)
+		}()
 
 		request := &scalezillapb.ServicePortsDiscoveryRequestReply{}
 		ctx, cancel := context.WithCancel(context.Background())
@@ -145,10 +146,10 @@ func TestCluster_grpc_receiver(t *testing.T) {
 		cluster := makeBasicCluster(cfg)
 		ctx, cancel := context.WithCancel(context.Background())
 		cluster.ctx = ctx
-		// cluster.buildAddressAndID()
-		// defer func() {
-		// 	_ = os.RemoveAll(cluster.config.DataDir)
-		// }()
+		cluster.buildAddressAndID()
+		defer func() {
+			_ = os.RemoveAll(cluster.config.DataDir)
+		}()
 		request := &scalezillapb.ServicePortsDiscoveryRequestReply{}
 
 		go func() {
@@ -169,9 +170,9 @@ func TestCluster_grpc_receiver(t *testing.T) {
 		cluster := makeBasicCluster(cfg)
 		cluster.ctx = context.Background()
 		cluster.buildAddressAndID()
-		// defer func() {
-		// 	_ = os.RemoveAll(cluster.config.DataDir)
-		// }()
+		defer func() {
+			_ = os.RemoveAll(cluster.config.DataDir)
+		}()
 
 		request := &scalezillapb.ServicePortsDiscoveryRequestReply{}
 
@@ -181,6 +182,168 @@ func TestCluster_grpc_receiver(t *testing.T) {
 		}()
 
 		_, err := cluster.ServicePortsDiscovery(context.Background(), request)
+		assert.ErrorIs(ErrTimeout, err)
+	})
+
+	t.Run("service_node_polling_context_cancelled_first", func(t *testing.T) {
+		cfg := basicClusterConfig{randomPort: true, dev: true}
+		cluster := makeBasicCluster(cfg)
+		cluster.ctx = context.Background()
+		cluster.buildAddressAndID()
+		defer func() {
+			_ = os.RemoveAll(cluster.config.DataDir)
+		}()
+
+		request := &scalezillapb.ServiceNodePollingRequestReply{}
+		ctx, cancel := context.WithCancel(context.Background())
+		defer cancel()
+
+		go func() {
+			time.Sleep(100 * time.Millisecond)
+			cancel()
+		}()
+
+		_, err := cluster.ServiceNodePolling(ctx, request)
+		assert.ErrorIs(context.Canceled, err)
+	})
+
+	t.Run("service_node_polling_context_shutdown_first", func(t *testing.T) {
+		cfg := basicClusterConfig{randomPort: true, dev: true}
+		cluster := makeBasicCluster(cfg)
+		ctx, cancel := context.WithCancel(context.Background())
+		cluster.ctx = ctx
+		cluster.buildAddressAndID()
+		defer func() {
+			_ = os.RemoveAll(cluster.config.DataDir)
+		}()
+		request := &scalezillapb.ServiceNodePollingRequestReply{}
+
+		go func() {
+			time.Sleep(50 * time.Millisecond)
+			cancel()
+		}()
+
+		_, err := cluster.ServiceNodePolling(context.Background(), request)
+		assert.ErrorIs(ErrShutdown, err)
+	})
+
+	t.Run("service_node_polling_err_timeout_first", func(t *testing.T) {
+		cfg := basicClusterConfig{randomPort: true, dev: true}
+		cluster := makeBasicCluster(cfg)
+		cluster.ctx = context.Background()
+		cluster.buildAddressAndID()
+		defer func() {
+			_ = os.RemoveAll(cluster.config.DataDir)
+		}()
+
+		request := &scalezillapb.ServiceNodePollingRequestReply{}
+
+		go func() {
+			time.Sleep(100 * time.Millisecond)
+			cluster.ctx.Done()
+		}()
+
+		_, err := cluster.ServiceNodePolling(context.Background(), request)
+		assert.ErrorIs(ErrTimeout, err)
+	})
+
+	t.Run("service_node_polling_response", func(t *testing.T) {
+		cfg := basicClusterConfig{randomPort: true, dev: true}
+		cluster := makeBasicCluster(cfg)
+		cluster.ctx = context.Background()
+		cluster.buildAddressAndID()
+		defer func() {
+			_ = os.RemoveAll(cluster.config.DataDir)
+		}()
+
+		request := &scalezillapb.ServiceNodePollingRequestReply{
+			Address: "12345",
+			Id:      "12345",
+		}
+
+		go func() {
+			time.Sleep(100 * time.Millisecond)
+			data := <-cluster.rpcServiceNodePollingChanReq
+			data.ResponseChan <- RPCResponse{
+				Response: &scalezillapb.ServiceNodePollingRequestReply{
+					Address: "123456",
+					Id:      "123456",
+				},
+			}
+		}()
+
+		response, err := cluster.ServiceNodePolling(context.Background(), request)
+		assert.Nil(err)
+		assert.Equal("123456", response.Id)
+	})
+
+	t.Run("service_node_polling_context_cancelled_second", func(t *testing.T) {
+		cfg := basicClusterConfig{randomPort: true, dev: true}
+		cluster := makeBasicCluster(cfg)
+		cluster.ctx = context.Background()
+		cluster.buildAddressAndID()
+		defer func() {
+			_ = os.RemoveAll(cluster.config.DataDir)
+		}()
+
+		request := &scalezillapb.ServiceNodePollingRequestReply{}
+		ctx, cancel := context.WithCancel(context.Background())
+		defer cancel()
+
+		go func() {
+			<-cluster.rpcServiceNodePollingChanReq
+		}()
+
+		go func() {
+			time.Sleep(100 * time.Millisecond)
+			cancel()
+		}()
+
+		_, err := cluster.ServiceNodePolling(ctx, request)
+		assert.ErrorIs(context.Canceled, err)
+	})
+
+	t.Run("service_node_polling_context_shutdown_second", func(t *testing.T) {
+		cfg := basicClusterConfig{randomPort: true, dev: true}
+		cluster := makeBasicCluster(cfg)
+		ctx, cancel := context.WithCancel(context.Background())
+		cluster.ctx = ctx
+		cluster.buildAddressAndID()
+		defer func() {
+			_ = os.RemoveAll(cluster.config.DataDir)
+		}()
+		request := &scalezillapb.ServiceNodePollingRequestReply{}
+
+		go func() {
+			<-cluster.rpcServiceNodePollingChanReq
+		}()
+
+		go func() {
+			time.Sleep(50 * time.Millisecond)
+			cancel()
+		}()
+
+		_, err := cluster.ServiceNodePolling(context.Background(), request)
+		assert.ErrorIs(ErrShutdown, err)
+	})
+
+	t.Run("service_node_polling_err_timeout_second", func(t *testing.T) {
+		cfg := basicClusterConfig{randomPort: true, dev: true}
+		cluster := makeBasicCluster(cfg)
+		cluster.ctx = context.Background()
+		cluster.buildAddressAndID()
+		defer func() {
+			_ = os.RemoveAll(cluster.config.DataDir)
+		}()
+
+		request := &scalezillapb.ServiceNodePollingRequestReply{}
+
+		go func() {
+			<-cluster.rpcServiceNodePollingChanReq
+			time.Sleep(time.Second)
+		}()
+
+		_, err := cluster.ServiceNodePolling(context.Background(), request)
 		assert.ErrorIs(ErrTimeout, err)
 	})
 }
