@@ -11,10 +11,15 @@ func (c *Cluster) respServicePortsDiscovery(data RPCResponse) {
 
 	response := data.Response.(RPCServicePortsDiscoveryResponse)
 	if response != (RPCServicePortsDiscoveryResponse{}) {
-		c.logger.Debug().Msgf("discovery response address %s id %s node pool %s http port %d grpc port %d raft port %d\n", response.Address, response.ID, response.NodePool, response.PortHTTP, response.PortGRPC, response.PortRaft)
+		c.logger.Debug().Msgf("discovery response from address %s id %s node pool %s http port %d grpc port %d raft port %d isVoter %t bootstrapExpectedSize %d", response.Address, response.ID, response.NodePool, response.PortHTTP, response.PortGRPC, response.PortRaft, response.IsVoter, c.bootstrapExpectedSize.Load())
 		c.nodeMapMu.Lock()
 		if _, ok := c.nodeMap[response.ID]; !ok {
-			c.bootstrapExpectedSize.Add(1)
+			if c.isVoter && !c.bootstrapExpectedSizeReach.Load() {
+				c.bootstrapExpectedSize.Add(1)
+			}
+			if !c.isVoter {
+				c.clientContactedServer.Store(true)
+			}
 			c.nodeMap[response.ID] = &nodeMap{
 				IsVoter:   response.IsVoter,
 				ID:        response.ID,

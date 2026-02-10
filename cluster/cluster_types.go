@@ -180,6 +180,12 @@ type Cluster struct {
 	// with bootstrapExpectedSizeReach variable
 	bootstrapExpectedSize atomic.Uint64
 
+	// clientContactedServer is an atomic bool flag set
+	// to check if the client has successfully contacted
+	// the server(s). It will then ask to be part of the cluster
+	// once boostrapped
+	clientContactedServer atomic.Bool
+
 	// nodeMap is a map of all nodes in the cluster
 	nodeMap map[string]*nodeMap
 
