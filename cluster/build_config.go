@@ -33,11 +33,11 @@ func (c *Cluster) buildAddressAndID() {
 func (c *Cluster) buildPeers() []rafty.InitialPeer {
 	peers := []rafty.InitialPeer{{Address: c.raftyAddress.String()}}
 
-	c.mu.Lock()
+	c.nodeMapMu.RLock()
 	for _, v := range c.nodeMap {
 		peers = append(peers, rafty.InitialPeer{Address: fmt.Sprintf("%s:%d", v.Address, v.RaftyPort)})
 	}
-	c.mu.Unlock()
+	c.nodeMapMu.RUnlock()
 
 	return peers
 }
