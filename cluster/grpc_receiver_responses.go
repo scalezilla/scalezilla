@@ -10,6 +10,7 @@ func (c *Cluster) rcvServicePortsDiscovery(data RPCRequest) {
 	request := data.Request.(*scalezillapb.ServicePortsDiscoveryRequestReply)
 	c.nodeMapMu.Lock()
 	if _, ok := c.nodeMap[request.Id]; !ok {
+		c.logger.Debug().Msgf("discovery request from address %s id %s node pool %s http port %d grpc port %d raft port %d isVoter %t bootstrapExpectedSize %d", request.Address, request.Id, request.NodePool, request.PortHttp, request.PortGrpc, request.PortRaft, request.IsVoter, c.bootstrapExpectedSize.Load())
 		if c.isVoter && !c.bootstrapExpectedSizeReach.Load() {
 			c.bootstrapExpectedSize.Add(1)
 		}
@@ -45,11 +46,7 @@ func (c *Cluster) rcvServicePortsDiscovery(data RPCRequest) {
 func (c *Cluster) rcvServiceNodePolling(data RPCRequest) {
 	request := data.Request.(*scalezillapb.ServiceNodePollingRequestReply)
 	c.nodeMapMu.Lock()
-	if _, ok := c.nodeMap[request.Id]; !ok {
-		c.nodeMap[request.Id] = &nodeMap{
-			Address: request.Address,
-			ID:      request.Id,
-		}
+	if _, ok := c.nodeMap[request.Id]; ok {
 		c.nodeMap[request.Id].SystemInfo.OS = &osdiscovery.OS{
 			Name:         request.OsName,
 			Vendor:       request.OsVendor,
@@ -85,7 +82,7 @@ func (c *Cluster) rcvServiceNodePolling(data RPCRequest) {
 		response.OsVendor = c.systemInfo.OS.Vendor
 		response.OsVersion = c.systemInfo.OS.Version
 		response.OsFamily = c.systemInfo.OS.Family
-		response.OsHostname = c.systemInfo.OS.Hostname
+		response.OsHostname = c.config.Hostname
 		response.OsArchitecture = c.systemInfo.OS.Architecture
 		response.OsType = c.systemInfo.OS.OSType
 		response.CpuTotal = c.systemInfo.CPU.CPU

@@ -76,7 +76,7 @@ func (c *Cluster) reqServiceNodePolling() {
 			OsVendor:               c.systemInfo.OS.Vendor,
 			OsVersion:              c.systemInfo.OS.Version,
 			OsFamily:               c.systemInfo.OS.Family,
-			OsHostname:             c.systemInfo.OS.Hostname,
+			OsHostname:             c.config.Hostname,
 			OsArchitecture:         c.systemInfo.OS.Architecture,
 			OsType:                 c.systemInfo.OS.OSType,
 			CpuTotal:               c.systemInfo.CPU.CPU,

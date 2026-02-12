@@ -88,13 +88,20 @@ func TestCluster_grpc_responses(t *testing.T) {
 		resp.Response = response
 		cluster.respServiceNodePolling(resp)
 
-		response = RPCServiceNodePollingResponse{
+		cluster.nodeMap["1234"] = &nodeMap{
 			Address: "1234",
-			ID:      "test",
+			ID:      "1234",
+		}
+
+		response = RPCServiceNodePollingResponse{
+			Address:        "1234",
+			ID:             "1234",
+			OsHostname:     cluster.systemInfo.OS.Hostname,
+			OsArchitecture: cluster.systemInfo.OS.Architecture,
 		}
 		resp.Response = response
 		cluster.respServiceNodePolling(resp)
-		assert.Equal(cluster.nodeMap[response.ID].Address, response.Address)
-		assert.Equal(cluster.nodeMap[response.ID].ID, response.ID)
+		assert.NotEmpty(cluster.nodeMap[response.ID].SystemInfo.OS.Hostname)
+		assert.NotEmpty(cluster.nodeMap[response.ID].SystemInfo.OS.Architecture)
 	})
 }
