@@ -44,11 +44,7 @@ func (c *Cluster) respServiceNodePolling(data RPCResponse) {
 	response, ok := data.Response.(RPCServiceNodePollingResponse)
 	if ok {
 		c.nodeMapMu.Lock()
-		if _, ok := c.nodeMap[response.ID]; !ok {
-			c.nodeMap[response.ID] = &nodeMap{
-				Address: response.Address,
-				ID:      response.ID,
-			}
+		if _, ok := c.nodeMap[response.ID]; ok {
 			c.nodeMap[response.ID].SystemInfo.OS = &osdiscovery.OS{
 				Name:         response.OsName,
 				Vendor:       response.OsVendor,
