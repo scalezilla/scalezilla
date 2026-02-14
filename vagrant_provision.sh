@@ -26,7 +26,7 @@ CLIENTS=$(cat ${TMP_FILE} | grep client | awk '{print $1}')
 
 if [[ "${TARGET}" == "server" ]]
 then
-  for i in ${SERVERS}; do vagrant provision "server$i" --provision-with scalezilla; done
+  for i in ${SERVERS}; do vagrant provision $i --provision-with scalezilla; done
 fi
 shift
 
