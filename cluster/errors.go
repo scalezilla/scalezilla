@@ -44,4 +44,7 @@ var (
 
 	// ErrShutdown is triggered when the node is shutting down
 	ErrShutdown = errors.New("node is shutting down")
+
+	// ErrClusterNotBootstrapped is triggered when the cluster is not bootstrapped
+	ErrClusterNotBootstrapped = errors.New("cluster not boostrapped")
 )
