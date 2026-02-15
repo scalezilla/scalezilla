@@ -93,6 +93,8 @@ func TestCluster_api_handler_nodes_list(t *testing.T) {
 					_ = os.RemoveAll(cluster.config.DataDir)
 				}()
 				assert.Nil(cluster.checkSystemInfo())
+				// the following is only a fix only for CI
+				cluster.systemInfo.OS.Hostname = "dev"
 				router := cluster.newApiRouters()
 				w := makeHTTPRequestRecorder(router, tc.method, tc.uri, tc.header, tc.body)
 
