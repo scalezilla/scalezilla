@@ -75,6 +75,11 @@ func TestCluster_grpc_receiver_responses(t *testing.T) {
 			_ = os.RemoveAll(cluster.config.DataDir)
 		}()
 
+		cluster.nodeMap["1234"] = &nodeMap{
+			Address: "1234",
+			ID:      "1234",
+		}
+
 		assert.Nil(cluster.checkSystemInfo())
 		responseChan := make(chan RPCResponse, 1)
 		request := RPCRequest{
