@@ -26,7 +26,7 @@ func (c *Cluster) buildAddressAndID() {
 		Port: int(c.config.RaftGRPCPort),
 	}
 
-	c.id = c.config.HostIPAddress
+	c.id = fmt.Sprintf("%s:%d", c.config.HostIPAddress, c.config.RaftGRPCPort)
 }
 
 // buildPeers will build the initial peer members of the cluster
@@ -35,7 +35,7 @@ func (c *Cluster) buildPeers() []rafty.InitialPeer {
 
 	c.nodeMapMu.RLock()
 	for _, v := range c.nodeMap {
-		peers = append(peers, rafty.InitialPeer{Address: fmt.Sprintf("%s:%d", v.Address, v.RaftyPort)})
+		peers = append(peers, rafty.InitialPeer{Address: v.Address})
 	}
 	c.nodeMapMu.RUnlock()
 
