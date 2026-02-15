@@ -190,7 +190,7 @@ type Cluster struct {
 	nodeMap map[string]*nodeMap
 
 	// nodeMapMu is used to ensure lock concurrency
-	nodeMapMu sync.Mutex
+	nodeMapMu sync.RWMutex
 
 	// connectionManager holds connections for all nodes
 	connectionManager connectionManager

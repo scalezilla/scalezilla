@@ -7,9 +7,11 @@ import (
 )
 
 type mockRafty struct {
-	called            bool
-	err, errBootstrap error
-	bootstrapped      bool
+	called                         bool
+	err, errBootstrap              error
+	bootstrapped, isLeader, leader bool
+	leaderAddress, leaderId        string
+	raftyStatus                    rafty.Status
 }
 
 func (m *mockRafty) Start() error {
@@ -34,4 +36,19 @@ func (m *mockRafty) SubmitCommand(timeout time.Duration, logKind rafty.LogKind, 
 func (m *mockRafty) BootstrapCluster(timeout time.Duration) error {
 	m.called = true
 	return m.errBootstrap
+}
+
+func (m *mockRafty) IsLeader() bool {
+	m.called = true
+	return m.isLeader
+}
+
+func (m *mockRafty) Status() rafty.Status {
+	m.called = true
+	return m.raftyStatus
+}
+
+func (m *mockRafty) Leader() (bool, string, string) {
+	m.called = true
+	return m.leader, m.leaderAddress, m.leaderId
 }

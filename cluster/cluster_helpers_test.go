@@ -45,6 +45,7 @@ func makeBasicCluster(cfg basicClusterConfig) *Cluster {
 		RaftGRPCPort:         raftGRPCPort,
 		TestRaftMetricPrefix: fake.CharactersN(50),
 		Dev:                  cfg.dev,
+		NodePool:             defaultNodePool,
 	}
 	config.Members = append(config.Members, fmt.Sprintf("%s:%d", defaultHostIPAddress, grpcPort+1))
 	config.Members = append(config.Members, fmt.Sprintf("%s:%d", defaultHostIPAddress, grpcPort+2))

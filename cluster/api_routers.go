@@ -21,6 +21,8 @@ func (c *Cluster) newApiRouters() *gin.Engine {
 
 		v1.GET("/cluster/bootstrap/status", c.bootstapStatus)
 		v1.POST("/cluster/bootstrap/cluster", c.bootstrapCluster)
+
+		v1.GET("/cluster/nodes/list", c.nodesList)
 	}
 	return router
 }
