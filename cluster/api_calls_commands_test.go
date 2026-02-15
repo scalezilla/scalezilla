@@ -100,12 +100,17 @@ func TestCluster_api_calls_command(t *testing.T) {
 
 	t.Run("nodes_list", func(t *testing.T) {
 		tests := []struct {
-			makeError  bool
-			statusCode int
-			token      string
-			response   string
-			kind       string
+			makeError    bool
+			statusCode   int
+			token        string
+			response     string
+			kind, format string
 		}{
+			{
+				statusCode: 200,
+				response:   `[{"id":"192.168.200.11","name":"server11","address":"192.168.200.11:15002","kind":"server","leader":true,"pool":"default"},{"id":"192.168.200.13","name":"server13","address":"192.168.200.13:15002","kind":"server","leader":false,"pool":"default"},{"id":"192.168.200.12","name":"server12","address":"192.168.200.12:15002","kind":"server","leader":false,"pool":"default"}]`,
+				format:     "table",
+			},
 			{
 				statusCode: 200,
 				response:   `[{"id":"192.168.200.11","name":"server11","address":"192.168.200.11:15002","kind":"server","leader":true,"pool":"default"},{"id":"192.168.200.13","name":"server13","address":"192.168.200.13:15002","kind":"server","leader":false,"pool":"default"},{"id":"192.168.200.12","name":"server12","address":"192.168.200.12:15002","kind":"server","leader":false,"pool":"default"}]`,
@@ -135,8 +140,13 @@ func TestCluster_api_calls_command(t *testing.T) {
 			}))
 			defer server.Close()
 
+			format := "json"
+			if tc.format != "" {
+				format = tc.format
+			}
 			config := NodesListHTTPConfig{Token: tc.token, Kind: tc.kind}
 			config.HTTPAddress = server.URL
+			config.OutputFormat = format
 			APICallsNodesList(config)
 		}
 

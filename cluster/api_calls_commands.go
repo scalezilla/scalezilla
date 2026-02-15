@@ -74,5 +74,9 @@ func APICallsNodesList(config NodesListHTTPConfig) {
 	}()
 	body, _ := io.ReadAll(resp.Body)
 
-	fmt.Println(string(body))
+	if config.OutputFormat == "json" {
+		fmt.Println(string(body))
+		return
+	}
+	printTableNodesList(body)
 }

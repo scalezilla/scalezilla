@@ -19,6 +19,9 @@ type ClusterHTTPCallBaseConfig struct {
 	// Context is the context provided by the cli
 	// to start the cluster
 	Context context.Context
+
+	// OutputFormat can only be table or json
+	OutputFormat string
 }
 
 // BootstrapClusterHTTPConfig is the configuration used by the cli

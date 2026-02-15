@@ -30,4 +30,9 @@ func TestCommandsNodesList(t *testing.T) {
 			t.Fatal("timeout waiting for Run() to stop")
 		}
 	})
+
+	t.Run("error", func(t *testing.T) {
+		cmd := Nodes()
+		assert.Error(cmd.Run(context.Background(), []string{"nodes", "list", "--output", "zzz"}))
+	})
 }
