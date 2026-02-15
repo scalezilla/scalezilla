@@ -52,8 +52,18 @@ func list() *cli.Command {
 				Usage:       "Kind node to list, server or client",
 				Destination: &app.Kind,
 			},
+			&cli.StringFlag{
+				Name:        "output",
+				Aliases:     []string{"o"},
+				Usage:       "output format can only be table or json",
+				Value:       "table",
+				Destination: &app.OutputFormat,
+			},
 		},
 		Action: func(ctx context.Context, _ *cli.Command) error {
+			if err := outputFormat(app.OutputFormat); err != nil {
+				return err
+			}
 			sigCtx, stop := cluster.BuildSignal(ctx)
 			defer stop()
 

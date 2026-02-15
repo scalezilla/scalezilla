@@ -47,4 +47,7 @@ var (
 
 	// ErrClusterNotBootstrapped is triggered when the cluster is not bootstrapped
 	ErrClusterNotBootstrapped = errors.New("cluster not boostrapped")
+
+	// ErrWrongFormat is triggered when the wrong format output is passed
+	ErrWrongFormat = errors.New("wrong format")
 )
