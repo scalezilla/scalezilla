@@ -22,6 +22,7 @@ func main() {
 		Commands: []*cli.Command{
 			commands.Agent(),
 			commands.Bootstrap(),
+			commands.Nodes(),
 		},
 	}
 

@@ -66,4 +66,7 @@ type raftyServer interface {
 	IsBootstrapped() bool
 	SubmitCommand(timeout time.Duration, logKind rafty.LogKind, command []byte) ([]byte, error)
 	BootstrapCluster(timeout time.Duration) error
+	IsLeader() bool
+	Leader() (bool, string, string)
+	Status() rafty.Status
 }

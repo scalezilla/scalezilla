@@ -97,4 +97,52 @@ func TestCluster_api_calls_command(t *testing.T) {
 		config.HTTPAddress = "htttp://127.0.0.1"
 		APICallsBootstrapCluster(config)
 	})
+
+	t.Run("nodes_list", func(t *testing.T) {
+		tests := []struct {
+			makeError  bool
+			statusCode int
+			token      string
+			response   string
+			kind       string
+		}{
+			{
+				statusCode: 200,
+				response:   `[{"id":"192.168.200.11","name":"server11","address":"192.168.200.11:15002","kind":"server","leader":true,"pool":"default"},{"id":"192.168.200.13","name":"server13","address":"192.168.200.13:15002","kind":"server","leader":false,"pool":"default"},{"id":"192.168.200.12","name":"server12","address":"192.168.200.12:15002","kind":"server","leader":false,"pool":"default"}]`,
+			},
+			{
+				statusCode: 200,
+				kind:       "server",
+				response:   `[{"id":"192.168.200.11","name":"server11","address":"192.168.200.11:15002","kind":"server","leader":true,"pool":"default"},{"id":"192.168.200.13","name":"server13","address":"192.168.200.13:15002","kind":"server","leader":false,"pool":"default"},{"id":"192.168.200.12","name":"server12","address":"192.168.200.12:15002","kind":"server","leader":false,"pool":"default"}]`,
+			},
+			{
+				makeError:  true,
+				statusCode: 500,
+				response:   `{"error", "Internal Server Error"}`,
+			},
+		}
+
+		for _, tc := range tests {
+			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				w.WriteHeader(tc.statusCode)
+				if tc.makeError {
+					_, err := fmt.Fprintln(w, tc.response)
+					assert.Nil(err)
+					return
+				}
+				_, err := fmt.Fprintln(w, tc.response)
+				assert.Nil(err)
+			}))
+			defer server.Close()
+
+			config := NodesListHTTPConfig{Token: tc.token, Kind: tc.kind}
+			config.HTTPAddress = server.URL
+			APICallsNodesList(config)
+		}
+
+		// provoke error
+		config := NodesListHTTPConfig{}
+		config.HTTPAddress = "htttp://127.0.0.1"
+		APICallsNodesList(config)
+	})
 }

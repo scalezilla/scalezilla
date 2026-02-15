@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestCluster_api_handlers_bootstrap(t *testing.T) {
+func TestCluster_api_handler_bootstrap(t *testing.T) {
 	assert := assert.New(t)
 
 	t.Run("bootstrap", func(t *testing.T) {

@@ -30,3 +30,17 @@ type BootstrapClusterHTTPConfig struct {
 	// Default config
 	ClusterHTTPCallBaseConfig
 }
+
+// NodesListHTTPConfig is the configuration used by the cli
+// to interact with the cluster nodes
+type NodesListHTTPConfig struct {
+	// Token to use to bootstrap the cluster
+	Token string
+
+	// Kind to use to list cluster nodes.
+	// Can only be server or client
+	Kind string
+
+	// Default config
+	ClusterHTTPCallBaseConfig
+}
