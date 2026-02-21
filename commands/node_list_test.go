@@ -12,10 +12,17 @@ func TestCommandsNodesList(t *testing.T) {
 	assert := assert.New(t)
 
 	t.Run("success", func(t *testing.T) {
+		dev := Dev()
 		cmd := Nodes()
 		ctx, cancel := context.WithCancel(context.Background())
 
-		done := make(chan error, 1)
+		done := make(chan error, 2)
+		go func() {
+			done <- dev.Run(ctx, []string{"dev", "--test-raft-metric-prefix", "commands-node-list-success"})
+		}()
+
+		time.Sleep(time.Second)
+
 		go func() {
 			done <- cmd.Run(ctx, []string{"nodes", "list"})
 		}()

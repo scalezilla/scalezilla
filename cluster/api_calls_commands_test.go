@@ -48,7 +48,7 @@ func TestCluster_api_calls_command(t *testing.T) {
 
 		// provoke error
 		config := ClusterHTTPCallBaseConfig{HTTPAddress: "htttp://127.0.0.1"}
-		APICallsBootstrapStatus(config)
+		assert.Error(APICallsBootstrapStatus(config))
 	})
 
 	t.Run("bootstrap", func(t *testing.T) {
@@ -89,13 +89,13 @@ func TestCluster_api_calls_command(t *testing.T) {
 
 			config := BootstrapClusterHTTPConfig{Token: tc.token}
 			config.HTTPAddress = server.URL
-			APICallsBootstrapCluster(config)
+			assert.Nil(APICallsBootstrapCluster(config))
 		}
 
 		// provoke error
 		config := BootstrapClusterHTTPConfig{}
 		config.HTTPAddress = "htttp://127.0.0.1"
-		APICallsBootstrapCluster(config)
+		assert.Error(APICallsBootstrapCluster(config))
 	})
 
 	t.Run("nodes_list", func(t *testing.T) {
@@ -147,12 +147,12 @@ func TestCluster_api_calls_command(t *testing.T) {
 			config := NodesListHTTPConfig{Token: tc.token, Kind: tc.kind}
 			config.HTTPAddress = server.URL
 			config.OutputFormat = format
-			APICallsNodesList(config)
+			assert.Nil(APICallsNodesList(config))
 		}
 
 		// provoke error
 		config := NodesListHTTPConfig{}
 		config.HTTPAddress = "htttp://127.0.0.1"
-		APICallsNodesList(config)
+		assert.Error(APICallsNodesList(config))
 	})
 }

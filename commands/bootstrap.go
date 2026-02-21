@@ -84,9 +84,7 @@ func bootstrap() *cli.Command {
 
 			app.Context = sigCtx
 			app.Logger = logger.NewLogger()
-			cluster.APICallsBootstrapCluster(app)
-
-			return nil
+			return cluster.APICallsBootstrapCluster(app)
 		},
 	}
 }
