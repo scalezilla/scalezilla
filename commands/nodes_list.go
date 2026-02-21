@@ -69,9 +69,7 @@ func list() *cli.Command {
 
 			app.Context = sigCtx
 			app.Logger = logger.NewLogger()
-			cluster.APICallsNodesList(app)
-
-			return nil
+			return cluster.APICallsNodesList(app)
 		},
 	}
 }

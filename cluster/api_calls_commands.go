@@ -11,13 +11,12 @@ import (
 
 // APICallsBootstrapStatus is used by cli command to interact
 // with the cluster
-func APICallsBootstrapStatus(config ClusterHTTPCallBaseConfig) {
+func APICallsBootstrapStatus(config ClusterHTTPCallBaseConfig) error {
 	path := "/api/v1/cluster/bootstrap/status"
 	url := fmt.Sprintf("%s%s", config.HTTPAddress, path)
 	resp, err := http.Get(url)
 	if err != nil {
-		fmt.Println(err.Error())
-		return
+		return err
 	}
 	defer func() {
 		_ = resp.Body.Close()
@@ -25,11 +24,12 @@ func APICallsBootstrapStatus(config ClusterHTTPCallBaseConfig) {
 	body, _ := io.ReadAll(resp.Body)
 
 	fmt.Println(string(body))
+	return nil
 }
 
 // APICallsBootstrapCluster is used by cli command
 // to bootstrap the cluster
-func APICallsBootstrapCluster(config BootstrapClusterHTTPConfig) {
+func APICallsBootstrapCluster(config BootstrapClusterHTTPConfig) error {
 	path := "/api/v1/cluster/bootstrap/cluster"
 	url := fmt.Sprintf("%s%s", config.HTTPAddress, path)
 
@@ -41,8 +41,7 @@ func APICallsBootstrapCluster(config BootstrapClusterHTTPConfig) {
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		fmt.Println(err.Error())
-		return
+		return err
 	}
 	defer func() {
 		_ = resp.Body.Close()
@@ -50,11 +49,12 @@ func APICallsBootstrapCluster(config BootstrapClusterHTTPConfig) {
 	body, _ := io.ReadAll(resp.Body)
 
 	fmt.Println(string(body))
+	return nil
 }
 
 // APICallsNodesList is used by cli command
 // to list cluster nodes
-func APICallsNodesList(config NodesListHTTPConfig) {
+func APICallsNodesList(config NodesListHTTPConfig) error {
 	path := "/api/v1/cluster/nodes/list"
 	url := fmt.Sprintf("%s%s", config.HTTPAddress, path)
 
@@ -66,8 +66,7 @@ func APICallsNodesList(config NodesListHTTPConfig) {
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		fmt.Println(err.Error())
-		return
+		return err
 	}
 	defer func() {
 		_ = resp.Body.Close()
@@ -76,7 +75,8 @@ func APICallsNodesList(config NodesListHTTPConfig) {
 
 	if config.OutputFormat == "json" {
 		fmt.Println(string(body))
-		return
+		return nil
 	}
 	printTableNodesList(body)
+	return nil
 }
