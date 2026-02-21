@@ -43,7 +43,7 @@ func TestCluster_api_calls_command(t *testing.T) {
 			defer server.Close()
 
 			config := ClusterHTTPCallBaseConfig{HTTPAddress: server.URL}
-			APICallsBootstrapStatus(config)
+			assert.Nil(APICallsBootstrapStatus(config))
 		}
 
 		// provoke error

@@ -25,7 +25,7 @@ func TestCommandsBootstrap(t *testing.T) {
 
 		select {
 		case err := <-done:
-			assert.Nil(err)
+			assert.Error(err)
 		case <-time.After(time.Second):
 			t.Fatal("timeout waiting for Run() to stop")
 		}

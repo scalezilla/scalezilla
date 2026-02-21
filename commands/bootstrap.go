@@ -44,9 +44,7 @@ func status() *cli.Command {
 
 			app.Context = sigCtx
 			app.Logger = logger.NewLogger()
-			cluster.APICallsBootstrapStatus(app)
-
-			return nil
+			return cluster.APICallsBootstrapStatus(app)
 		},
 	}
 }
