@@ -40,7 +40,7 @@ func TestCluster_grpc_requests(t *testing.T) {
 			assert.ErrorContains(data.Error, "connection refused")
 		}()
 
-		member := cluster.members[0]
+		member := cluster.members_grpc[0]
 		if client := cluster.getClient(member); client != nil {
 			cluster.di.sendRPCFunc(member, client, request)
 		}
@@ -114,7 +114,7 @@ func TestCluster_grpc_requests(t *testing.T) {
 			assert.ErrorContains(data.Error, "connection refused")
 		}()
 
-		member := cluster.members[0]
+		member := cluster.members_grpc[0]
 		if client := cluster.getClient(member); client != nil {
 			cluster.di.sendRPCFunc(member, client, request)
 		}

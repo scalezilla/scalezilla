@@ -111,8 +111,14 @@ type Cluster struct {
 	// isVoter statuates if the current node is a voting member node
 	isVoter bool
 
-	// Members are the rafty cluster members
-	members []string
+	// Members_http are the HTTP cluster members
+	members_http []string
+
+	// members_grpc are the GRPC cluster members
+	members_grpc []string
+
+	// Members_raft are the RAFTY cluster members
+	members_raft []string
 
 	// grpcAddress is the address of the current node
 	grpcAddress net.TCPAddr
