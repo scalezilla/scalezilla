@@ -36,17 +36,9 @@ func TestCluster_build_config(t *testing.T) {
 		grpcPort := 16001
 		raftPort := 16002
 		address := "127.0.0.1"
-		cluster.members = append(cluster.members, fmt.Sprintf("%s:%d", address, grpcPort))
-		cluster.nodeMap["16000"] = &nodeMap{
-			IsVoter:   true,
-			ID:        fmt.Sprintf("%d", grpcPort),
-			Address:   address,
-			HTTPPort:  uint32(httpPort),
-			GRPCPort:  uint32(grpcPort),
-			RaftyPort: uint32(raftPort),
-			NodePool:  defaultNodePool,
-		}
-
+		cluster.members_raft = append(cluster.members_raft, fmt.Sprintf("%s:%d", address, raftPort))
+		cluster.members_grpc = append(cluster.members_grpc, fmt.Sprintf("%s:%d", address, grpcPort))
+		cluster.members_http = append(cluster.members_http, fmt.Sprintf("%s:%d", address, httpPort))
 		assert.NotNil(cluster.buildPeers())
 	})
 

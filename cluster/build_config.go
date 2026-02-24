@@ -33,11 +33,9 @@ func (c *Cluster) buildAddressAndID() {
 func (c *Cluster) buildPeers() []rafty.InitialPeer {
 	peers := []rafty.InitialPeer{{Address: c.raftyAddress.String()}}
 
-	c.nodeMapMu.RLock()
-	for _, v := range c.nodeMap {
-		peers = append(peers, rafty.InitialPeer{Address: v.Address})
+	for _, v := range c.members_raft {
+		peers = append(peers, rafty.InitialPeer{Address: v})
 	}
-	c.nodeMapMu.RUnlock()
 
 	return peers
 }
@@ -82,5 +80,5 @@ func (c *Cluster) buildDevConfig(config ClusterInitialConfig) {
 		},
 	}
 	c.config.Server = server
-	c.members = config.Members
+	c.members_http, c.members_grpc, c.members_raft = parseMembers(config.Members)
 }

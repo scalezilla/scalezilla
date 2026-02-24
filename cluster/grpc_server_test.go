@@ -71,8 +71,8 @@ func TestCluster_grpc_server(t *testing.T) {
 			_ = os.RemoveAll(cluster.config.DataDir)
 		}()
 
-		assert.NotNil(cluster.getClient(cluster.members[0]))
-		assert.NotNil(cluster.getClient(cluster.members[0])) // second time to fetch data from map
+		assert.NotNil(cluster.getClient(cluster.members_grpc[0]))
+		assert.NotNil(cluster.getClient(cluster.members_grpc[0])) // second time to fetch data from map
 	})
 
 	t.Run("cluster_dev", func(t *testing.T) {

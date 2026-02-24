@@ -86,7 +86,7 @@ func (c *Cluster) parseConfig() error {
 
 	if config.Server != nil && config.Server.Enabled {
 		c.isVoter = true
-		c.members = config.Server.ClusterJoin.InitialMembers
+		c.members_raft = config.Server.ClusterJoin.InitialMembers
 
 		if config.Server.Raft.TimeMultiplier == 0 {
 			config.Server.Raft.TimeMultiplier = 1
@@ -113,7 +113,7 @@ func (c *Cluster) parseConfig() error {
 	}
 
 	if config.Client != nil && config.Client.Enabled {
-		c.members = config.Client.ClusterJoin.InitialMembers
+		c.members_raft = config.Client.ClusterJoin.InitialMembers
 
 		if config.Client.Raft.TimeMultiplier == 0 {
 			config.Client.Raft.TimeMultiplier = 2
@@ -144,8 +144,8 @@ func (c *Cluster) parseConfig() error {
 		}
 	}
 
-	c.members = parseMembers(c.members)
-	if c.members == nil {
+	c.members_http, c.members_grpc, c.members_raft = parseMembers(c.members_raft)
+	if len(c.members_raft) == 0 {
 		return ErrClusterJoinInitialMembersInvalid
 	}
 
@@ -160,19 +160,25 @@ func (c *Cluster) parseConfig() error {
 
 // parseMembers will parse each member to find the host and port.
 // If not port, the default GRPC port will be used
-func parseMembers(members []string) (z []string) {
+func parseMembers(members []string) (http []string, grpc []string, raft []string) {
 	for _, member := range members {
-		_, port, err := net.SplitHostPort(member)
+		host, port, err := net.SplitHostPort(member)
 		if err != nil {
 			if !strings.Contains(err.Error(), "missing port in address") {
-				z = nil
+				http = nil
+				grpc = nil
+				raft = nil
 				return
 			}
 			if port == "" {
-				z = append(z, fmt.Sprintf("%s:%d", member, defaultGRPCPort))
+				http = append(http, fmt.Sprintf("%s:%d", member, defaultHTTPPort))
+				grpc = append(grpc, fmt.Sprintf("%s:%d", member, defaultGRPCPort))
+				raft = append(raft, fmt.Sprintf("%s:%d", member, defaultRaftGRPCPort))
 			}
 		} else {
-			z = append(z, member)
+			http = append(http, fmt.Sprintf("%s:%d", host, defaultHTTPPort))
+			grpc = append(grpc, fmt.Sprintf("%s:%d", host, defaultGRPCPort))
+			raft = append(raft, member)
 		}
 	}
 	return

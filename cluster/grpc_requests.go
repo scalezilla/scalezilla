@@ -55,7 +55,7 @@ func (c *Cluster) reqServicePortsDiscovery() {
 		ResponseChan: c.rpcServicePortsDiscoveryChanResp,
 	}
 
-	for _, member := range c.members {
+	for _, member := range c.members_grpc {
 		go func() {
 			if client := c.getClient(member); client != nil {
 				c.di.sendRPCFunc(member, client, request)
@@ -94,7 +94,7 @@ func (c *Cluster) reqServiceNodePolling() {
 		ResponseChan: c.rpcServiceNodePollingChanResp,
 	}
 
-	for _, member := range c.members {
+	for _, member := range c.members_grpc {
 		go func() {
 			if client := c.getClient(member); client != nil {
 				c.di.sendRPCFunc(member, client, request)

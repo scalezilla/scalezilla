@@ -49,24 +49,35 @@ func TestCluster_parse_members(t *testing.T) {
 	assert := assert.New(t)
 
 	tests := []struct {
-		members []string
-		result  []string
+		members     []string
+		result_http []string
+		result_grpc []string
+		result_raft []string
 	}{
 		{
-			members: []string{"1.2.3.4"},
-			result:  []string{fmt.Sprintf("1.2.3.4:%d", defaultGRPCPort)},
+			members:     []string{"1.2.3.4"},
+			result_http: []string{fmt.Sprintf("1.2.3.4:%d", defaultHTTPPort)},
+			result_grpc: []string{fmt.Sprintf("1.2.3.4:%d", defaultGRPCPort)},
+			result_raft: []string{fmt.Sprintf("1.2.3.4:%d", defaultRaftGRPCPort)},
 		},
 		{
-			members: []string{"1.2.3.4:12345"},
-			result:  []string{"1.2.3.4:12345"},
+			members:     []string{"1.2.3.4:12345"},
+			result_http: []string{fmt.Sprintf("1.2.3.4:%d", defaultHTTPPort)},
+			result_grpc: []string{fmt.Sprintf("1.2.3.4:%d", defaultGRPCPort)},
+			result_raft: []string{"1.2.3.4:12345"},
 		},
 		{
-			members: []string{"[foo]:[bar]baz"},
-			result:  nil,
+			members:     []string{"[foo]:[bar]baz"},
+			result_http: nil,
+			result_grpc: nil,
+			result_raft: nil,
 		},
 	}
 
 	for _, tc := range tests {
-		assert.Equal(tc.result, parseMembers(tc.members))
+		http, grpc, raft := parseMembers(tc.members)
+		assert.Equal(tc.result_http, http)
+		assert.Equal(tc.result_grpc, grpc)
+		assert.Equal(tc.result_raft, raft)
 	}
 }

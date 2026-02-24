@@ -55,7 +55,7 @@ func TestCluster_api_handler_nodes_list(t *testing.T) {
 				expectedStatusCode: 200,
 				bootstrapped:       true,
 				raftyLeader:        true,
-				expectedBody:       `[{"id":"127.0.0.1:20008","name":"fake","address":"127.0.0.1:20008","kind":"server","leader":true,"nodePool":"default"},{"id":"127.0.0.1:20001","name":"127.0.0.1:20001","address":"127.0.0.1:20001","kind":"server","leader":false,"nodePool":"default"},{"id":"127.0.0.1:20004","name":"127.0.0.1:20004","address":"127.0.0.1:20004","kind":"server","leader":false,"nodePool":"default"}]`,
+				expectedBody:       `[{"id":"127.0.0.1:20008","name":"fake","address":"127.0.0.1:20008","kind":"server","leader":true,"nodePool":"default"},{"id":"127.0.0.1:20002","name":"127.0.0.1:20002","address":"127.0.0.1:20002","kind":"server","leader":false,"nodePool":"default"},{"id":"127.0.0.1:20005","name":"127.0.0.1:20005","address":"127.0.0.1:20005","kind":"server","leader":false,"nodePool":"default"}]`,
 			},
 			{
 				method:             "GET",
@@ -63,7 +63,7 @@ func TestCluster_api_handler_nodes_list(t *testing.T) {
 				expectedStatusCode: 200,
 				bootstrapped:       true,
 				raftyLeader:        true,
-				expectedBody:       `[{"id":"127.0.0.1:20008","name":"fake","address":"127.0.0.1:20008","kind":"server","leader":true,"nodePool":"default"},{"id":"127.0.0.1:20001","name":"127.0.0.1:20001","address":"127.0.0.1:20001","kind":"server","leader":false,"nodePool":"default"},{"id":"127.0.0.1:20004","name":"127.0.0.1:20004","address":"127.0.0.1:20004","kind":"server","leader":false,"nodePool":"default"}]`,
+				expectedBody:       `[{"id":"127.0.0.1:20008","name":"fake","address":"127.0.0.1:20008","kind":"server","leader":true,"nodePool":"default"},{"id":"127.0.0.1:20002","name":"127.0.0.1:20002","address":"127.0.0.1:20002","kind":"server","leader":false,"nodePool":"default"},{"id":"127.0.0.1:20005","name":"127.0.0.1:20005","address":"127.0.0.1:20005","kind":"server","leader":false,"nodePool":"default"}]`,
 			},
 			{
 				method:             "GET",
@@ -72,7 +72,7 @@ func TestCluster_api_handler_nodes_list(t *testing.T) {
 				bootstrapped:       true,
 				raftyLeader:        true,
 				clientSize:         1,
-				expectedBody:       `[{"id":"127.0.0.1:20001","name":"127.0.0.1:20001","address":"127.0.0.1:20001","kind":"server","leader":true,"nodePool":"default"},{"id":"127.0.0.1:20004","name":"127.0.0.1:20004","address":"127.0.0.1:20004","kind":"server","leader":false,"nodePool":"default"},{"id":"127.0.0.1:20007","name":"127.0.0.1:20007","address":"127.0.0.1:20007","kind":"server","leader":false,"nodePool":"default"},{"id":"127.0.0.1:20005","name":"fake","address":"127.0.0.1:20005","kind":"client","leader":false,"nodePool":"default"}]`,
+				expectedBody:       `[{"id":"127.0.0.1:20002","name":"127.0.0.1:20002","address":"127.0.0.1:20002","kind":"server","leader":true,"nodePool":"default"},{"id":"127.0.0.1:20005","name":"127.0.0.1:20005","address":"127.0.0.1:20005","kind":"server","leader":false,"nodePool":"default"},{"id":"127.0.0.1:20008","name":"127.0.0.1:20008","address":"127.0.0.1:20008","kind":"server","leader":false,"nodePool":"default"},{"id":"127.0.0.1:20011","name":"fake","address":"127.0.0.1:20011","kind":"client","leader":false,"nodePool":"default"}]`,
 			},
 			{
 				method:             "GET",
@@ -81,7 +81,7 @@ func TestCluster_api_handler_nodes_list(t *testing.T) {
 				bootstrapped:       true,
 				raftyLeader:        true,
 				clientSize:         1,
-				expectedBody:       `[{"id":"127.0.0.1:20005","name":"fake","address":"127.0.0.1:20005","kind":"client","leader":false,"nodePool":"default"}]`,
+				expectedBody:       `[{"id":"127.0.0.1:20011","name":"fake","address":"127.0.0.1:20011","kind":"client","leader":false,"nodePool":"default"}]`,
 			},
 		}
 

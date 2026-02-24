@@ -101,13 +101,14 @@ func makeSizedCluster(cfg sizedClusterConfig) (cluster []*Cluster) {
 		cfg.port = 20000
 	}
 
-	var voters []string
+	var voters_http, voters_grpc, voters_raft []string
 	baseHTTPPort, baseGRPCPort, baseRaftPort := cfg.port+uint16(0), cfg.port+1, cfg.port+2
 	dbaseHTTPPort, dbaseGRPCPort, dbaseRaftPort := cfg.port+uint16(0), cfg.port+1, cfg.port+2
+
 	for i := range cfg.voterSize {
 		var (
-			httpPort, grpcPort, raftGRPCPort uint16
-			members                          []string
+			httpPort, grpcPort, raftGRPCPort         uint16
+			members_http, members_grpc, members_raft []string
 		)
 		if i == 0 {
 			httpPort = baseHTTPPort
@@ -123,12 +124,19 @@ func makeSizedCluster(cfg sizedClusterConfig) (cluster []*Cluster) {
 			if s == i {
 				continue
 			}
-			members = append(members, fmt.Sprintf("%s:%d", defaultHostIPAddress, dbaseGRPCPort+3*uint16(s)))
+			members_http = append(members_http, fmt.Sprintf("%s:%d", defaultHostIPAddress, dbaseHTTPPort+3*uint16(s)))
+			members_grpc = append(members_grpc, fmt.Sprintf("%s:%d", defaultHostIPAddress, dbaseGRPCPort+3*uint16(s)))
+			members_raft = append(members_raft, fmt.Sprintf("%s:%d", defaultHostIPAddress, dbaseRaftPort+3*uint16(s)))
 		}
 
 		if i == 0 {
-			voters = append(voters, fmt.Sprintf("%s:%d", defaultHostIPAddress, baseGRPCPort))
-			voters = append(voters, members...)
+			voters_http = append(voters_http, fmt.Sprintf("%s:%d", defaultHostIPAddress, baseHTTPPort))
+			voters_grpc = append(voters_grpc, fmt.Sprintf("%s:%d", defaultHostIPAddress, baseGRPCPort))
+			voters_raft = append(voters_raft, fmt.Sprintf("%s:%d", defaultHostIPAddress, baseRaftPort))
+
+			voters_http = append(voters_http, members_http...)
+			voters_grpc = append(voters_grpc, members_grpc...)
+			voters_raft = append(voters_raft, members_raft...)
 		}
 
 		config := ClusterInitialConfig{
@@ -152,12 +160,14 @@ func makeSizedCluster(cfg sizedClusterConfig) (cluster []*Cluster) {
 		// unset dev requirements
 		z.dev = false
 		z.isVoter = true
-		z.members = members
+		z.members_http = members_http
+		z.members_grpc = members_grpc
+		z.members_raft = members_raft
 
 		server := &Server{
 			Enabled: true,
 			ClusterJoin: &ClusterJoin{
-				InitialMembers: members,
+				InitialMembers: members_raft,
 			},
 			Raft: &RaftConfig{
 				TimeMultiplier:        1,
@@ -170,19 +180,16 @@ func makeSizedCluster(cfg sizedClusterConfig) (cluster []*Cluster) {
 		cluster = append(cluster, z)
 	}
 
-	xsize := cfg.voterSize * cfg.clientSize
+	dbaseHTTPPort = dbaseHTTPPort + 3*cfg.voterSize
+	dbaseGRPCPort = dbaseGRPCPort + 3*cfg.voterSize
+	dbaseRaftPort = dbaseRaftPort + 3*cfg.voterSize
+
 	for i := range cfg.clientSize {
 		var httpPort, grpcPort, raftGRPCPort uint16
 
-		if i == 0 {
-			httpPort = dbaseHTTPPort + xsize
-			grpcPort = dbaseGRPCPort + xsize
-			raftGRPCPort = dbaseRaftPort + xsize
-		} else {
-			httpPort = dbaseHTTPPort + xsize + 3*uint16(i)
-			grpcPort = dbaseGRPCPort + xsize + 3*uint16(i)
-			raftGRPCPort = dbaseRaftPort + xsize + 3*uint16(i)
-		}
+		httpPort = dbaseHTTPPort + 3*uint16(i)
+		grpcPort = dbaseGRPCPort + 3*uint16(i)
+		raftGRPCPort = dbaseRaftPort + 3*uint16(i)
 
 		config := ClusterInitialConfig{
 			Logger:               logger.NewLogger(),
@@ -205,13 +212,15 @@ func makeSizedCluster(cfg sizedClusterConfig) (cluster []*Cluster) {
 		// unset dev requirements
 		z.dev = false
 		z.isVoter = false
-		z.members = voters
+		z.members_http = voters_http
+		z.members_grpc = voters_grpc
+		z.members_raft = voters_raft
 
 		nodePool := defaultNodePool
 		client := &Client{
 			Enabled: true,
 			ClusterJoin: &ClusterJoin{
-				InitialMembers: voters,
+				InitialMembers: voters_raft,
 			},
 			Raft: &RaftConfig{
 				TimeMultiplier:    1,
@@ -311,7 +320,7 @@ func TestMakeSizedCluster(t *testing.T) {
 
 	for _, tc := range tests {
 		cluster := makeSizedCluster(sizedClusterConfig{voterSize: tc.voterSize, clientSize: tc.clientSize})
-		assert.Equal(tc.expected, cluster[tc.clusterIndex].members)
+		assert.Equal(tc.expected, cluster[tc.clusterIndex].members_grpc)
 		assert.Equal(tc.httpPort, cluster[tc.clusterIndex].config.HTTPPort)
 		assert.Equal(tc.grpcPort, cluster[tc.clusterIndex].config.GRPCPort)
 		assert.Equal(tc.raftPort, cluster[tc.clusterIndex].config.RaftGRPCPort)
