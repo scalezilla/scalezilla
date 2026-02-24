@@ -23,8 +23,12 @@ func APICallsBootstrapStatus(config ClusterHTTPCallBaseConfig) error {
 	}()
 	body, _ := io.ReadAll(resp.Body)
 
-	fmt.Println(string(body))
-	return nil
+	if resp.StatusCode == 200 {
+		fmt.Println(string(body))
+		return nil
+	}
+
+	return decodeError(body)
 }
 
 // APICallsBootstrapCluster is used by cli command
@@ -48,8 +52,12 @@ func APICallsBootstrapCluster(config BootstrapClusterHTTPConfig) error {
 	}()
 	body, _ := io.ReadAll(resp.Body)
 
-	fmt.Println(string(body))
-	return nil
+	if resp.StatusCode == 200 {
+		fmt.Println(string(body))
+		return nil
+	}
+
+	return decodeError(body)
 }
 
 // APICallsNodesList is used by cli command
@@ -73,10 +81,14 @@ func APICallsNodesList(config NodesListHTTPConfig) error {
 	}()
 	body, _ := io.ReadAll(resp.Body)
 
-	if config.OutputFormat == "json" {
-		fmt.Println(string(body))
+	if resp.StatusCode == 200 {
+		if config.OutputFormat == "json" {
+			fmt.Println(string(body))
+			return nil
+		}
+		printTableNodesList(body)
 		return nil
 	}
-	printTableNodesList(body)
-	return nil
+
+	return decodeError(body)
 }

@@ -2,6 +2,7 @@ package cluster
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -30,4 +31,13 @@ func printTableNodesList(body []byte) {
 		)
 	}
 	_ = w.Flush()
+}
+
+// decodeError decode the current error to return it to the main func
+func decodeError(body []byte) error {
+	var resp respError
+	if err := json.Unmarshal(body, &resp); err != nil {
+		return err
+	}
+	return errors.New(resp.Error)
 }
