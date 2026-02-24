@@ -51,3 +51,9 @@ var (
 	// ErrWrongFormat is triggered when the wrong format output is passed
 	ErrWrongFormat = errors.New("wrong format")
 )
+
+// respError is used to decode errors
+// from HTTP request
+type respError struct {
+	Error string `json:"error"`
+}

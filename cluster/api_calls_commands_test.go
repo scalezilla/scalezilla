@@ -43,7 +43,11 @@ func TestCluster_api_calls_command(t *testing.T) {
 			defer server.Close()
 
 			config := ClusterHTTPCallBaseConfig{HTTPAddress: server.URL}
-			assert.Nil(APICallsBootstrapStatus(config))
+			if tc.makeError {
+				assert.Error(APICallsBootstrapStatus(config))
+			} else {
+				assert.Nil(APICallsBootstrapStatus(config))
+			}
 		}
 
 		// provoke error
@@ -89,7 +93,11 @@ func TestCluster_api_calls_command(t *testing.T) {
 
 			config := BootstrapClusterHTTPConfig{Token: tc.token}
 			config.HTTPAddress = server.URL
-			assert.Nil(APICallsBootstrapCluster(config))
+			if tc.makeError {
+				assert.Error(APICallsBootstrapCluster(config))
+			} else {
+				assert.Nil(APICallsBootstrapCluster(config))
+			}
 		}
 
 		// provoke error
@@ -147,7 +155,11 @@ func TestCluster_api_calls_command(t *testing.T) {
 			config := NodesListHTTPConfig{Token: tc.token, Kind: tc.kind}
 			config.HTTPAddress = server.URL
 			config.OutputFormat = format
-			assert.Nil(APICallsNodesList(config))
+			if tc.makeError {
+				assert.Error(APICallsNodesList(config))
+			} else {
+				assert.Nil(APICallsNodesList(config))
+			}
 		}
 
 		// provoke error
