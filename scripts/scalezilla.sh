@@ -16,7 +16,8 @@ SCALEZILLA_TMP_FILE=/tmp/scalezilla.log
 > ${SCALEZILLA_TMP_FILE}
 cd ${SCALEZILLA_HOME_DIR}
 go mod download
-pgrep go && kill $(pgrep -f "main agent") && sleep 2
+pgrep go && kill $(pgrep -f "main agent") && sleep 5
+pgrep go && for i in $(pgrep -f "main agent"); do kill -9 $i;done
 rm -rf /var/lib/scalezilla
 export SCALEZILLA_LOG_LEVEL=trace
 nohup go run main.go agent config -f ${SCALEZILLA_HOME_DIR}/cluster/testdata/config/${CONFIG} &> ${SCALEZILLA_TMP_FILE} &
