@@ -33,4 +33,16 @@ func TestCluster_grpc_content_builders(t *testing.T) {
 		assert.Equal(&scalezillapb.ServiceNodePollingRequestReply{Address: "X"}, makeServiceNodePollingRequest(request))
 		assert.Equal(response, makeServiceNodePollingResponse(&scalezillapb.ServiceNodePollingRequestReply{Address: "X"}))
 	})
+
+	t.Run("service_node_register", func(t *testing.T) {
+		request := RPCServiceNodeRegisterRequest{}
+		assert.Equal(&scalezillapb.ServiceNodeRegisterRequest{}, makeServiceNodeRegisterRequest(request))
+		response := RPCServiceNodeRegisterResponse{}
+		assert.Equal(response, makeServiceNodeRegisterResponse(nil))
+
+		request = RPCServiceNodeRegisterRequest{Address: "X"}
+		assert.Equal(&scalezillapb.ServiceNodeRegisterRequest{Address: "X"}, makeServiceNodeRegisterRequest(request))
+		response = RPCServiceNodeRegisterResponse{Acknowledged: true}
+		assert.Equal(response, makeServiceNodeRegisterResponse(&scalezillapb.ServiceNodeRegisterReply{Acknowledged: true}))
+	})
 }

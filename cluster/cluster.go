@@ -27,8 +27,11 @@ func NewCluster(config ClusterInitialConfig) (*Cluster, error) {
 		rpcServicePortsDiscoveryChanResp: make(chan RPCResponse),
 		rpcServiceNodePollingChanReq:     make(chan RPCRequest),
 		rpcServiceNodePollingChanResp:    make(chan RPCResponse),
+		rpcServiceNodeRegisterChanReq:    make(chan RPCRequest),
+		rpcServiceNodeRegisterChanResp:   make(chan RPCResponse),
 		checkBootstrapSizeDuration:       5 * time.Second,
 		nodePollingTimer:                 15 * time.Second,
+		nodeRegisterTimer:                10 * time.Second,
 	}
 
 	c.di.newRaftyFunc = c.newRafty

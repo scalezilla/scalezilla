@@ -225,6 +225,18 @@ type Cluster struct {
 	// nodePollingTimer is the frequency at which the node
 	// will send node polling rpc request to other nodes
 	nodePollingTimer time.Duration
+
+	// rpcServiceNodeRegisterChanReq is used by the grpc
+	// receiver to respond back to the caller
+	rpcServiceNodeRegisterChanReq chan RPCRequest
+
+	// rpcServiceNodeRegisterChanResp is used to receive
+	// answers sent by actual node
+	rpcServiceNodeRegisterChanResp chan RPCResponse
+
+	// nodeRegisterTimer is the frequency at which the node
+	// will send node register rpc request to the leader
+	nodeRegisterTimer time.Duration
 }
 
 // dependencyInjections is a struct holding all

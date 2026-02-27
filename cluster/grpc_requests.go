@@ -2,6 +2,7 @@ package cluster
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/scalezilla/scalezilla/scalezillapb"
@@ -35,6 +36,14 @@ func (c *Cluster) sendRPC(address string, client scalezillapb.ScalezillaClient, 
 			options...,
 		)
 		request.ResponseChan <- RPCResponse{Response: makeServiceNodePollingResponse(resp), Error: err, TargetNode: address}
+
+	case ServiceNodeRegister:
+		resp, err := client.ServiceNodeRegister(
+			ctx,
+			makeServiceNodeRegisterRequest(request.Request.(RPCServiceNodeRegisterRequest)),
+			options...,
+		)
+		request.ResponseChan <- RPCResponse{Response: makeServiceNodeRegisterResponse(resp), Error: err, TargetNode: address}
 	}
 }
 
@@ -100,5 +109,35 @@ func (c *Cluster) reqServiceNodePolling() {
 				c.di.sendRPCFunc(member, client, request)
 			}
 		}()
+	}
+}
+
+// reqServiceNodeRegister will send a rpc request to the leader
+// to be part of the cluster
+func (c *Cluster) reqServiceNodeRegister() {
+	request := RPCRequest{
+		RPCType: ServiceNodeRegister,
+		Request: RPCServiceNodeRegisterRequest{
+			Address: c.raftyAddress.String(),
+			ID:      c.id,
+			IsVoter: c.isVoter,
+		},
+		Timeout:      time.Second,
+		ResponseChan: c.rpcServiceNodeRegisterChanResp,
+	}
+
+	if ok, leaderAddress, leaderId := c.rafty.FetchLeader(); ok {
+		if grpcAddress, ok := c.getServiceAddressFromRaft(leaderAddress); ok {
+			c.logger.Debug().
+				Str("address", c.raftyAddress.String()).
+				Str("id", c.id).
+				Str("isVoter", fmt.Sprintf("%t", c.isVoter)).
+				Str("leaderAddress", grpcAddress).
+				Str("leaderId", leaderId).
+				Msgf("Asking for cluster membership")
+			if client := c.getClient(grpcAddress); client != nil {
+				c.di.sendRPCFunc(grpcAddress, client, request)
+			}
+		}
 	}
 }

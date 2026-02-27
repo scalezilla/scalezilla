@@ -1,6 +1,9 @@
 package cluster
 
 import (
+	"fmt"
+	"time"
+
 	"github.com/scalezilla/scalezilla/osdiscovery"
 	"github.com/scalezilla/scalezilla/scalezillapb"
 )
@@ -97,5 +100,35 @@ func (c *Cluster) rcvServiceNodePolling(data RPCRequest) {
 	}
 	data.ResponseChan <- RPCResponse{
 		Response: response,
+	}
+}
+
+// rcvServiceNodeRegister will answer back to rpc request from grpc receiver
+func (c *Cluster) rcvServiceNodeRegister(data RPCRequest) {
+	request := data.Request.(*scalezillapb.ServiceNodeRegisterRequest)
+
+	data.ResponseChan <- RPCResponse{
+		Response: &scalezillapb.ServiceNodeRegisterReply{Acknowledged: true},
+	}
+
+	if c.rafty.IsBootstrapped() && c.rafty.IsLeader() {
+		c.logger.Debug().
+			Str("address", c.raftyAddress.String()).
+			Str("id", c.id).
+			Str("peerAddress", request.Address).
+			Str("peerId", request.Id).
+			Str("peerIsVoter", fmt.Sprintf("%t", c.isVoter)).
+			Str("action", "add").
+			Msgf("Add member")
+		if err := c.rafty.AddMember(5*time.Second, request.Address, request.Id, request.IsVoter); err != nil {
+			c.logger.Error().Err(err).
+				Str("address", c.raftyAddress.String()).
+				Str("id", c.id).
+				Str("peerAddress", request.Address).
+				Str("peerId", request.Id).
+				Str("peerIsVoter", fmt.Sprintf("%t", c.isVoter)).
+				Str("action", "add").
+				Msgf("Fail to add member")
+		}
 	}
 }

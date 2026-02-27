@@ -5,8 +5,10 @@ import "time"
 // grpcLoop receive all rpc requests or responses
 // from other nodes and also client commands
 func (c *Cluster) grpcLoop() {
-	ticker := time.NewTicker(c.nodePollingTimer)
-	defer ticker.Stop()
+	tickerNodePolling := time.NewTicker(c.nodePollingTimer)
+	defer tickerNodePolling.Stop()
+	tickerNodeRegister := time.NewTicker(c.nodeRegisterTimer)
+	defer tickerNodeRegister.Stop()
 
 	for {
 		select {
@@ -15,6 +17,8 @@ func (c *Cluster) grpcLoop() {
 			c.drainRespServicePortsDiscovery()
 			c.drainRCVServiceNodePolling()
 			c.drainRespServiceNodePolling()
+			c.drainRCVServiceNodeRegister()
+			c.drainRespServiceNodeRegister()
 			return
 
 		case data, ok := <-c.rpcServicePortsDiscoveryChanReq:
@@ -27,7 +31,7 @@ func (c *Cluster) grpcLoop() {
 				c.respServicePortsDiscovery(data)
 			}
 
-		case <-ticker.C:
+		case <-tickerNodePolling.C:
 			if c.isRunning.Load() && !c.dev {
 				c.reqServiceNodePolling()
 			}
@@ -40,6 +44,21 @@ func (c *Cluster) grpcLoop() {
 		case data, ok := <-c.rpcServiceNodePollingChanResp:
 			if ok {
 				c.respServiceNodePolling(data)
+			}
+
+		case <-tickerNodeRegister.C:
+			if c.isRunning.Load() && !c.dev && c.rafty.AskForMembership() {
+				c.reqServiceNodeRegister()
+			}
+
+		case data, ok := <-c.rpcServiceNodeRegisterChanReq:
+			if ok {
+				c.rcvServiceNodeRegister(data)
+			}
+
+		case data, ok := <-c.rpcServiceNodeRegisterChanResp:
+			if ok {
+				c.respServiceNodeRegister(data)
 			}
 		}
 	}
@@ -100,6 +119,37 @@ func (c *Cluster) drainRespServiceNodePolling() {
 	for {
 		select {
 		case <-c.rpcServiceNodePollingChanResp:
+		//nolint staticcheck
+		default:
+			return
+		}
+	}
+}
+
+// drainRCVServiceNodeRegister will drain all remaining data in the chan
+func (c *Cluster) drainRCVServiceNodeRegister() {
+	for {
+		select {
+		case data := <-c.rpcServiceNodeRegisterChanReq:
+			select {
+			case data.ResponseChan <- RPCResponse{
+				Error: ErrShutdown,
+			}:
+			//nolint staticcheck
+			default:
+			}
+		//nolint staticcheck
+		default:
+			return
+		}
+	}
+}
+
+// drainRespServiceNodeRegister will drain all remaining data in the chan
+func (c *Cluster) drainRespServiceNodeRegister() {
+	for {
+		select {
+		case <-c.rpcServiceNodeRegisterChanResp:
 		//nolint staticcheck
 		default:
 			return

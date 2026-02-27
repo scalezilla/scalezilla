@@ -159,4 +159,72 @@ func TestCluster_grpc_requests(t *testing.T) {
 
 		cluster.reqServiceNodePolling()
 	})
+
+	t.Run("send_rpc_service_node_register", func(t *testing.T) {
+		clusters := makeSizedCluster(sizedClusterConfig{})
+		cluster := clusters[0]
+		defer func() {
+			_ = os.RemoveAll(cluster.config.DataDir)
+		}()
+
+		request := RPCRequest{
+			RPCType: ServiceNodeRegister,
+			Request: RPCServiceNodeRegisterRequest{
+				Address: cluster.grpcAddress.String(),
+				ID:      cluster.id,
+				IsVoter: cluster.isVoter,
+			},
+			Timeout:      time.Second,
+			ResponseChan: cluster.rpcServiceNodeRegisterChanResp,
+		}
+
+		go func() {
+			time.Sleep(100 * time.Millisecond)
+			data := <-cluster.rpcServiceNodeRegisterChanResp
+			assert.ErrorContains(data.Error, "connection refused")
+		}()
+
+		member := cluster.members_grpc[0]
+		if client := cluster.getClient(member); client != nil {
+			cluster.di.sendRPCFunc(member, client, request)
+		}
+	})
+
+	t.Run("req_service_node_register", func(t *testing.T) {
+		clusters := makeSizedCluster(sizedClusterConfig{})
+		cluster := clusters[0]
+		defer func() {
+			_ = os.RemoveAll(cluster.config.DataDir)
+		}()
+
+		resp := &scalezillapb.ServiceNodeRegisterReply{
+			Acknowledged: true,
+		}
+
+		mock := mockRafty{
+			leaderAddress: cluster.members_raft[0],
+			leaderId:      cluster.members_raft[0],
+			leader:        true,
+		}
+		cluster.rafty = &mock
+		cluster.nodeMap[cluster.members_grpc[0]] = &nodeMap{
+			ID:        cluster.members_grpc[0],
+			HTTPPort:  uint32(defaultHTTPPort),
+			GRPCPort:  uint32(defaultGRPCPort),
+			RaftyPort: uint32(defaultRaftGRPCPort),
+		}
+		cluster.di.sendRPCFunc = func(address string, client scalezillapb.ScalezillaClient, request RPCRequest) {
+			request.ResponseChan <- RPCResponse{
+				Response: makeServiceNodeRegisterResponse(resp), Error: nil, TargetNode: address}
+		}
+
+		go func() {
+			time.Sleep(100 * time.Millisecond)
+			data := <-cluster.rpcServiceNodeRegisterChanResp
+			response := data.Response.(RPCServiceNodeRegisterResponse)
+			assert.Equal(resp.Acknowledged, response.Acknowledged)
+		}()
+
+		cluster.reqServiceNodeRegister()
+	})
 }

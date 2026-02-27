@@ -13,6 +13,9 @@ const (
 
 	// ServiceNodePolling will be used to perform service node polling
 	ServiceNodePolling
+
+	// ServiceNodeRegister will be used to register node
+	ServiceNodeRegister
 )
 
 // RPCRequest is used by chans in order to manage rpc requests
@@ -70,4 +73,16 @@ type RPCServiceNodePollingResponse struct {
 	CpuVendor, CpuModel                   string
 	MemoryTotal, MemoryAvailable          uint64
 	Metadata                              map[string]string
+}
+
+// RPCServiceNodeRegisterRequest holds the requirements
+// to be part of the cluster
+type RPCServiceNodeRegisterRequest struct {
+	Address, ID string
+	IsVoter     bool
+}
+
+// RPCServiceNodeRegisterResponse holds the response from RPCServiceNodeRegisterRequest
+type RPCServiceNodeRegisterResponse struct {
+	Acknowledged bool
 }

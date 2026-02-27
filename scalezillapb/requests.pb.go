@@ -301,6 +301,110 @@ func (x *ServiceNodePollingRequestReply) GetMetadata() map[string]string {
 	return nil
 }
 
+type ServiceNodeRegisterRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Address       string                 `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
+	Id            string                 `protobuf:"bytes,2,opt,name=id,proto3" json:"id,omitempty"`
+	IsVoter       bool                   `protobuf:"varint,3,opt,name=is_voter,json=isVoter,proto3" json:"is_voter,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ServiceNodeRegisterRequest) Reset() {
+	*x = ServiceNodeRegisterRequest{}
+	mi := &file_scalezillapb_requests_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ServiceNodeRegisterRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ServiceNodeRegisterRequest) ProtoMessage() {}
+
+func (x *ServiceNodeRegisterRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_scalezillapb_requests_proto_msgTypes[2]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ServiceNodeRegisterRequest.ProtoReflect.Descriptor instead.
+func (*ServiceNodeRegisterRequest) Descriptor() ([]byte, []int) {
+	return file_scalezillapb_requests_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *ServiceNodeRegisterRequest) GetAddress() string {
+	if x != nil {
+		return x.Address
+	}
+	return ""
+}
+
+func (x *ServiceNodeRegisterRequest) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+func (x *ServiceNodeRegisterRequest) GetIsVoter() bool {
+	if x != nil {
+		return x.IsVoter
+	}
+	return false
+}
+
+type ServiceNodeRegisterReply struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Acknowledged  bool                   `protobuf:"varint,1,opt,name=acknowledged,proto3" json:"acknowledged,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ServiceNodeRegisterReply) Reset() {
+	*x = ServiceNodeRegisterReply{}
+	mi := &file_scalezillapb_requests_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ServiceNodeRegisterReply) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ServiceNodeRegisterReply) ProtoMessage() {}
+
+func (x *ServiceNodeRegisterReply) ProtoReflect() protoreflect.Message {
+	mi := &file_scalezillapb_requests_proto_msgTypes[3]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ServiceNodeRegisterReply.ProtoReflect.Descriptor instead.
+func (*ServiceNodeRegisterReply) Descriptor() ([]byte, []int) {
+	return file_scalezillapb_requests_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *ServiceNodeRegisterReply) GetAcknowledged() bool {
+	if x != nil {
+		return x.Acknowledged
+	}
+	return false
+}
+
 var File_scalezillapb_requests_proto protoreflect.FileDescriptor
 
 const file_scalezillapb_requests_proto_rawDesc = "" +
@@ -340,11 +444,18 @@ const file_scalezillapb_requests_proto_rawDesc = "" +
 	"\bmetadata\x18\x13 \x03(\v2:.scalezillapb.ServiceNodePollingRequestReply.MetadataEntryR\bmetadata\x1a;\n" +
 	"\rMetadataEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
-	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x012\xfd\x01\n" +
+	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"a\n" +
+	"\x1aServiceNodeRegisterRequest\x12\x18\n" +
+	"\aaddress\x18\x01 \x01(\tR\aaddress\x12\x0e\n" +
+	"\x02id\x18\x02 \x01(\tR\x02id\x12\x19\n" +
+	"\bis_voter\x18\x03 \x01(\bR\aisVoter\">\n" +
+	"\x18ServiceNodeRegisterReply\x12\"\n" +
+	"\facknowledged\x18\x01 \x01(\bR\facknowledged2\xe8\x02\n" +
 	"\n" +
 	"Scalezilla\x12{\n" +
 	"\x15ServicePortsDiscovery\x12/.scalezillapb.ServicePortsDiscoveryRequestReply\x1a/.scalezillapb.ServicePortsDiscoveryRequestReply\"\x00\x12r\n" +
-	"\x12ServiceNodePolling\x12,.scalezillapb.ServiceNodePollingRequestReply\x1a,.scalezillapb.ServiceNodePollingRequestReply\"\x00B/Z-github.com/scalezilla/scalezilla/scalezillapbb\x06proto3"
+	"\x12ServiceNodePolling\x12,.scalezillapb.ServiceNodePollingRequestReply\x1a,.scalezillapb.ServiceNodePollingRequestReply\"\x00\x12i\n" +
+	"\x13ServiceNodeRegister\x12(.scalezillapb.ServiceNodeRegisterRequest\x1a&.scalezillapb.ServiceNodeRegisterReply\"\x00B/Z-github.com/scalezilla/scalezilla/scalezillapbb\x06proto3"
 
 var (
 	file_scalezillapb_requests_proto_rawDescOnce sync.Once
@@ -358,20 +469,24 @@ func file_scalezillapb_requests_proto_rawDescGZIP() []byte {
 	return file_scalezillapb_requests_proto_rawDescData
 }
 
-var file_scalezillapb_requests_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
+var file_scalezillapb_requests_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
 var file_scalezillapb_requests_proto_goTypes = []any{
 	(*ServicePortsDiscoveryRequestReply)(nil), // 0: scalezillapb.ServicePortsDiscoveryRequestReply
 	(*ServiceNodePollingRequestReply)(nil),    // 1: scalezillapb.ServiceNodePollingRequestReply
-	nil,                                       // 2: scalezillapb.ServiceNodePollingRequestReply.MetadataEntry
+	(*ServiceNodeRegisterRequest)(nil),        // 2: scalezillapb.ServiceNodeRegisterRequest
+	(*ServiceNodeRegisterReply)(nil),          // 3: scalezillapb.ServiceNodeRegisterReply
+	nil,                                       // 4: scalezillapb.ServiceNodePollingRequestReply.MetadataEntry
 }
 var file_scalezillapb_requests_proto_depIdxs = []int32{
-	2, // 0: scalezillapb.ServiceNodePollingRequestReply.metadata:type_name -> scalezillapb.ServiceNodePollingRequestReply.MetadataEntry
+	4, // 0: scalezillapb.ServiceNodePollingRequestReply.metadata:type_name -> scalezillapb.ServiceNodePollingRequestReply.MetadataEntry
 	0, // 1: scalezillapb.Scalezilla.ServicePortsDiscovery:input_type -> scalezillapb.ServicePortsDiscoveryRequestReply
 	1, // 2: scalezillapb.Scalezilla.ServiceNodePolling:input_type -> scalezillapb.ServiceNodePollingRequestReply
-	0, // 3: scalezillapb.Scalezilla.ServicePortsDiscovery:output_type -> scalezillapb.ServicePortsDiscoveryRequestReply
-	1, // 4: scalezillapb.Scalezilla.ServiceNodePolling:output_type -> scalezillapb.ServiceNodePollingRequestReply
-	3, // [3:5] is the sub-list for method output_type
-	1, // [1:3] is the sub-list for method input_type
+	2, // 3: scalezillapb.Scalezilla.ServiceNodeRegister:input_type -> scalezillapb.ServiceNodeRegisterRequest
+	0, // 4: scalezillapb.Scalezilla.ServicePortsDiscovery:output_type -> scalezillapb.ServicePortsDiscoveryRequestReply
+	1, // 5: scalezillapb.Scalezilla.ServiceNodePolling:output_type -> scalezillapb.ServiceNodePollingRequestReply
+	3, // 6: scalezillapb.Scalezilla.ServiceNodeRegister:output_type -> scalezillapb.ServiceNodeRegisterReply
+	4, // [4:7] is the sub-list for method output_type
+	1, // [1:4] is the sub-list for method input_type
 	1, // [1:1] is the sub-list for extension type_name
 	1, // [1:1] is the sub-list for extension extendee
 	0, // [0:1] is the sub-list for field type_name
@@ -388,7 +503,7 @@ func file_scalezillapb_requests_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_scalezillapb_requests_proto_rawDesc), len(file_scalezillapb_requests_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   3,
+			NumMessages:   5,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
