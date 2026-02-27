@@ -1,9 +1,11 @@
 package cluster
 
 import (
+	"errors"
 	"os"
 	"testing"
 
+	"github.com/scalezilla/scalezilla/logger"
 	"github.com/scalezilla/scalezilla/scalezillapb"
 	"github.com/stretchr/testify/assert"
 )
@@ -14,7 +16,6 @@ func TestCluster_grpc_receiver_responses(t *testing.T) {
 	t.Run("rcv_service_ports_discovery_server", func(t *testing.T) {
 		clusters := makeSizedCluster(sizedClusterConfig{})
 		cluster := clusters[len(clusters)-1]
-		cluster.buildAddressAndID()
 		defer func() {
 			_ = os.RemoveAll(cluster.config.DataDir)
 		}()
@@ -42,7 +43,6 @@ func TestCluster_grpc_receiver_responses(t *testing.T) {
 	t.Run("rcv_service_ports_discovery_client", func(t *testing.T) {
 		clusters := makeSizedCluster(sizedClusterConfig{clientSize: 1})
 		cluster := clusters[len(clusters)-1]
-		cluster.buildAddressAndID()
 		defer func() {
 			_ = os.RemoveAll(cluster.config.DataDir)
 		}()
@@ -70,7 +70,6 @@ func TestCluster_grpc_receiver_responses(t *testing.T) {
 	t.Run("rcv_service_node_polling", func(t *testing.T) {
 		cfg := basicClusterConfig{randomPort: true, dev: true}
 		cluster := makeBasicCluster(cfg)
-		cluster.buildAddressAndID()
 		defer func() {
 			_ = os.RemoveAll(cluster.config.DataDir)
 		}()
@@ -110,5 +109,68 @@ func TestCluster_grpc_receiver_responses(t *testing.T) {
 		go cluster.rcvServiceNodePolling(request)
 		response := <-responseChan
 		assert.NotNil(response.Response)
+	})
+
+	t.Run("rcv_service_node_register_success", func(t *testing.T) {
+		cfg := basicClusterConfig{randomPort: true, dev: true}
+		cluster := makeBasicCluster(cfg)
+		defer func() {
+			_ = os.RemoveAll(cluster.config.DataDir)
+		}()
+		cluster.logger = logger.NewLogger()
+
+		mock := mockRafty{
+			isLeader:     true,
+			bootstrapped: true,
+		}
+		cluster.rafty = &mock
+
+		responseChan := make(chan RPCResponse, 1)
+		request := RPCRequest{
+			RPCType: ServiceNodeRegister,
+			Request: &scalezillapb.ServiceNodeRegisterRequest{
+				Address: "1234",
+				Id:      "1234",
+				IsVoter: true,
+			},
+			ResponseChan: responseChan,
+		}
+
+		go cluster.rcvServiceNodeRegister(request)
+		response := <-responseChan
+		result := response.Response.(*scalezillapb.ServiceNodeRegisterReply)
+		assert.Equal(true, result.Acknowledged)
+	})
+
+	t.Run("rcv_service_node_register_error_add_member", func(t *testing.T) {
+		cfg := basicClusterConfig{randomPort: true, dev: true}
+		cluster := makeBasicCluster(cfg)
+		defer func() {
+			_ = os.RemoveAll(cluster.config.DataDir)
+		}()
+		cluster.logger = logger.NewLogger()
+
+		mock := mockRafty{
+			isLeader:     true,
+			bootstrapped: true,
+			errAddMember: errors.New("operation timeout"),
+		}
+		cluster.rafty = &mock
+
+		responseChan := make(chan RPCResponse, 1)
+		request := RPCRequest{
+			RPCType: ServiceNodeRegister,
+			Request: &scalezillapb.ServiceNodeRegisterRequest{
+				Address: "1234",
+				Id:      "1234",
+				IsVoter: true,
+			},
+			ResponseChan: responseChan,
+		}
+
+		go cluster.rcvServiceNodeRegister(request)
+		response := <-responseChan
+		result := response.Response.(*scalezillapb.ServiceNodeRegisterReply)
+		assert.Equal(true, result.Acknowledged)
 	})
 }

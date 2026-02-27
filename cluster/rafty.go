@@ -16,7 +16,6 @@ func (c *Cluster) newRafty() (*rafty.Rafty, error) {
 		IsVoter:                c.isVoter,
 		InitialPeers:           c.buildPeers(),
 		MetricsNamespacePrefix: c.raftMetricPrefix,
-		ShutdownOnRemove:       true,
 		BootstrapCluster:       true,
 		MaxAppendEntries:       defaultMaxAppendEntries,
 	}

@@ -14,7 +14,6 @@ func TestCluster_grpc_responses(t *testing.T) {
 	t.Run("resp_service_ports_discovery_server", func(t *testing.T) {
 		cfg := basicClusterConfig{randomPort: true, dev: true}
 		cluster := makeBasicCluster(cfg)
-		cluster.buildAddressAndID()
 		defer func() {
 			_ = os.RemoveAll(cluster.config.DataDir)
 		}()
@@ -43,7 +42,6 @@ func TestCluster_grpc_responses(t *testing.T) {
 	t.Run("resp_service_ports_discovery_client", func(t *testing.T) {
 		clusters := makeSizedCluster(sizedClusterConfig{clientSize: 1})
 		cluster := clusters[len(clusters)-1]
-		cluster.buildAddressAndID()
 		defer func() {
 			_ = os.RemoveAll(cluster.config.DataDir)
 		}()
@@ -72,7 +70,6 @@ func TestCluster_grpc_responses(t *testing.T) {
 	t.Run("resp_service_node_polling", func(t *testing.T) {
 		cfg := basicClusterConfig{randomPort: true, dev: true}
 		cluster := makeBasicCluster(cfg)
-		cluster.buildAddressAndID()
 		defer func() {
 			_ = os.RemoveAll(cluster.config.DataDir)
 		}()
@@ -103,5 +100,29 @@ func TestCluster_grpc_responses(t *testing.T) {
 		cluster.respServiceNodePolling(resp)
 		assert.NotEmpty(cluster.nodeMap[response.ID].SystemInfo.OS.Hostname)
 		assert.NotEmpty(cluster.nodeMap[response.ID].SystemInfo.OS.Architecture)
+	})
+
+	t.Run("resp_service_node_register", func(t *testing.T) {
+		clusters := makeSizedCluster(sizedClusterConfig{})
+		cluster := clusters[0]
+		defer func() {
+			_ = os.RemoveAll(cluster.config.DataDir)
+		}()
+
+		resp := RPCResponse{
+			Error: errors.New("test error"),
+		}
+		cluster.respServiceNodeRegister(resp)
+
+		resp.Error = nil
+		response := RPCServiceNodeRegisterResponse{}
+		resp.Response = response
+		cluster.respServiceNodeRegister(resp)
+
+		response = RPCServiceNodeRegisterResponse{
+			Acknowledged: true,
+		}
+		resp.Response = response
+		cluster.respServiceNodeRegister(resp)
 	})
 }

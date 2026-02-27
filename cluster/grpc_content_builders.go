@@ -85,3 +85,20 @@ func makeServiceNodePollingResponse(data *scalezillapb.ServiceNodePollingRequest
 		Metadata:               data.Metadata,
 	}
 }
+
+// makeServiceNodeRegisterRequest build request for that matter
+func makeServiceNodeRegisterRequest(data RPCServiceNodeRegisterRequest) *scalezillapb.ServiceNodeRegisterRequest {
+	return &scalezillapb.ServiceNodeRegisterRequest{
+		Address: data.Address,
+		Id:      data.ID,
+		IsVoter: data.IsVoter,
+	}
+}
+
+// makeServiceNodeRegisterResponse build response for that matter
+func makeServiceNodeRegisterResponse(data *scalezillapb.ServiceNodeRegisterReply) RPCServiceNodeRegisterResponse {
+	if data == nil {
+		return RPCServiceNodeRegisterResponse{}
+	}
+	return RPCServiceNodeRegisterResponse{Acknowledged: data.Acknowledged}
+}

@@ -7,11 +7,12 @@ import (
 )
 
 type mockRafty struct {
-	called                         bool
-	err, errBootstrap              error
-	bootstrapped, isLeader, leader bool
-	leaderAddress, leaderId        string
-	raftyStatus                    rafty.Status
+	called                          bool
+	err, errBootstrap, errAddMember error
+	bootstrapped, isLeader, leader  bool
+	askForMembership                bool
+	leaderAddress, leaderId         string
+	raftyStatus                     rafty.Status
 }
 
 func (m *mockRafty) Start() error {
@@ -51,4 +52,19 @@ func (m *mockRafty) Status() rafty.Status {
 func (m *mockRafty) Leader() (bool, string, string) {
 	m.called = true
 	return m.leader, m.leaderAddress, m.leaderId
+}
+
+func (m *mockRafty) FetchLeader() (bool, string, string) {
+	m.called = true
+	return m.leader, m.leaderAddress, m.leaderId
+}
+
+func (m *mockRafty) AskForMembership() bool {
+	m.called = true
+	return m.askForMembership
+}
+
+func (m *mockRafty) AddMember(timeout time.Duration, address, id string, isVoter bool) error {
+	m.called = true
+	return m.errAddMember
 }

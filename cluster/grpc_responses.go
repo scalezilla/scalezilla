@@ -2,8 +2,7 @@ package cluster
 
 import "github.com/scalezilla/scalezilla/osdiscovery"
 
-// respServicePortsDiscovery will receive response
-// from reqServicePortsDiscovery
+// respServicePortsDiscovery will receive response from reqServicePortsDiscovery
 func (c *Cluster) respServicePortsDiscovery(data RPCResponse) {
 	if data.Error != nil {
 		return
@@ -34,8 +33,7 @@ func (c *Cluster) respServicePortsDiscovery(data RPCResponse) {
 	}
 }
 
-// respServiceNodePolling will receive response
-// from reqServicePNodePolling
+// respServiceNodePolling will receive response from reqServiceNodePolling
 func (c *Cluster) respServiceNodePolling(data RPCResponse) {
 	if data.Error != nil {
 		return
@@ -70,5 +68,19 @@ func (c *Cluster) respServiceNodePolling(data RPCResponse) {
 			c.nodeMap[response.ID].Metadata = response.Metadata
 		}
 		c.nodeMapMu.Unlock()
+	}
+}
+
+// respServiceNodeRegister will receive response from reqServiceNodeRegister
+func (c *Cluster) respServiceNodeRegister(data RPCResponse) {
+	if data.Error != nil {
+		return
+	}
+
+	if response, ok := data.Response.(RPCServiceNodeRegisterResponse); ok {
+		c.logger.Debug().
+			Str("address", c.raftyAddress.String()).
+			Str("id", c.id).
+			Msgf("Node register response from leader %t", response.Acknowledged)
 	}
 }

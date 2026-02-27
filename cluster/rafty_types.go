@@ -68,5 +68,8 @@ type raftyServer interface {
 	BootstrapCluster(timeout time.Duration) error
 	IsLeader() bool
 	Leader() (bool, string, string)
+	FetchLeader() (bool, string, string)
 	Status() rafty.Status
+	AskForMembership() bool
+	AddMember(timeout time.Duration, address, id string, isVoter bool) error
 }

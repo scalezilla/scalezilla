@@ -2,6 +2,7 @@ package cluster
 
 import (
 	"context"
+	"os"
 	"testing"
 	"time"
 
@@ -92,9 +93,55 @@ func TestCluster_grpc_loop(t *testing.T) {
 		cluster.wg.Wait()
 	})
 
+	t.Run("node_register", func(t *testing.T) {
+		clusters := makeSizedCluster(sizedClusterConfig{})
+		cluster := clusters[0]
+		cluster.isRunning.Store(true)
+		cluster.nodeRegisterTimer = 50 * time.Millisecond
+		ctx, cancel := context.WithCancel(context.Background())
+		cluster.ctx = ctx
+		cluster.wg.Go(cluster.grpcLoop)
+		mock := &mockRafty{
+			isLeader:         true,
+			bootstrapped:     true,
+			askForMembership: true,
+		}
+		cluster.rafty = mock
+
+		responseChan := make(chan RPCResponse, 1)
+		request := RPCRequest{
+			RPCType: ServiceNodeRegister,
+			Request: &scalezillapb.ServiceNodeRegisterRequest{
+				Address: "1234",
+				Id:      "1234",
+			},
+			ResponseChan: responseChan,
+		}
+
+		go func() {
+			time.Sleep(700 * time.Millisecond)
+			cancel()
+		}()
+
+		cluster.rpcServiceNodeRegisterChanReq <- request
+		response := <-responseChan
+		assert.NotNil(response.Response)
+
+		cluster.rpcServiceNodeRegisterChanResp <- RPCResponse{
+			Response: RPCServiceNodeRegisterResponse{
+				Acknowledged: true,
+			},
+		}
+
+		cluster.wg.Wait()
+	})
+
 	t.Run("drain_rcv_service_ports_discovery", func(t *testing.T) {
-		cfg := basicClusterConfig{randomPort: true, dev: true}
-		cluster := makeBasicCluster(cfg)
+		clusters := makeSizedCluster(sizedClusterConfig{})
+		cluster := clusters[0]
+		defer func() {
+			_ = os.RemoveAll(cluster.config.DataDir)
+		}()
 
 		responseChan := make(chan RPCResponse, 1)
 		request := RPCRequest{
@@ -199,6 +246,64 @@ func TestCluster_grpc_loop(t *testing.T) {
 		cluster.wg.Go(func() {
 			time.Sleep(100 * time.Millisecond)
 			cluster.drainRespServiceNodePolling()
+		})
+		cluster.wg.Wait()
+	})
+
+	t.Run("drain_rcv_service_node_register", func(t *testing.T) {
+		cfg := basicClusterConfig{randomPort: true, dev: true}
+		cluster := makeBasicCluster(cfg)
+		cluster.nodeRegisterTimer = 50 * time.Millisecond
+		cluster.isRunning.Store(true)
+		cluster.dev = false
+		mock := &mockRafty{askForMembership: true}
+		cluster.rafty = mock
+
+		responseChan := make(chan RPCResponse, 1)
+		request := RPCRequest{
+			RPCType: ServiceNodeRegister,
+			Request: &scalezillapb.ServiceNodeRegisterRequest{
+				Address: "1234",
+				Id:      "1234",
+			},
+			ResponseChan: responseChan,
+		}
+
+		cluster.wg.Go(func() {
+			for {
+				select {
+				case cluster.rpcServiceNodeRegisterChanReq <- request:
+				case <-time.After(200 * time.Millisecond):
+					return
+				}
+			}
+		})
+
+		cluster.wg.Go(func() {
+			time.Sleep(100 * time.Millisecond)
+			cluster.drainRCVServiceNodeRegister()
+		})
+		cluster.wg.Wait()
+	})
+
+	t.Run("drain_resp_service_node_register", func(t *testing.T) {
+		cfg := basicClusterConfig{randomPort: true, dev: true}
+		cluster := makeBasicCluster(cfg)
+		cluster.nodeRegisterTimer = 50 * time.Millisecond
+
+		cluster.wg.Go(func() {
+			for {
+				select {
+				case cluster.rpcServiceNodeRegisterChanResp <- RPCResponse{}:
+				case <-time.After(200 * time.Millisecond):
+					return
+				}
+			}
+		})
+
+		cluster.wg.Go(func() {
+			time.Sleep(100 * time.Millisecond)
+			cluster.drainRespServiceNodeRegister()
 		})
 		cluster.wg.Wait()
 	})

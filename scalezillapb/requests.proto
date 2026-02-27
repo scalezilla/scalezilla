@@ -49,7 +49,18 @@ message ServiceNodePollingRequestReply {
   map<string, string> metadata      = 19;
 }
 
+message ServiceNodeRegisterRequest {
+  string address   = 1;
+  string id        = 2;
+  bool   is_voter  = 3;
+}
+
+message ServiceNodeRegisterReply {
+  bool acknowledged = 1;
+}
+
 service Scalezilla {
   rpc ServicePortsDiscovery(ServicePortsDiscoveryRequestReply) returns (ServicePortsDiscoveryRequestReply) {}
   rpc ServiceNodePolling(ServiceNodePollingRequestReply) returns (ServiceNodePollingRequestReply) {}
+  rpc ServiceNodeRegister(ServiceNodeRegisterRequest) returns (ServiceNodeRegisterReply) {}
 }
