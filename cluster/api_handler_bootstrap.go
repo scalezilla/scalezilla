@@ -45,7 +45,7 @@ func (cc *Cluster) bootstrapCluster(c *gin.Context) {
 		Token:        tok,
 		InitialToken: true,
 	}
-	if err := cc.submitCommandACLTokenWrite(5*time.Second, aclTokenCommandSet, z); err != nil {
+	if err := cc.submitCommandACLTokenWrite(30*time.Second, aclTokenCommandSet, z); err != nil {
 		cc.logger.Error().Err(err).Str("component", "bootstrap").Msgf("submit acl token command err")
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
