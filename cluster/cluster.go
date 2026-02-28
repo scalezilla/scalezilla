@@ -30,6 +30,7 @@ func NewCluster(config ClusterInitialConfig) (*Cluster, error) {
 		rpcServiceNodeRegisterChanReq:    make(chan RPCRequest),
 		rpcServiceNodeRegisterChanResp:   make(chan RPCResponse),
 		checkBootstrapSizeDuration:       5 * time.Second,
+		servicePortsDiscoveryTimer:       10 * time.Second,
 		nodePollingTimer:                 15 * time.Second,
 		nodeRegisterTimer:                10 * time.Second,
 	}

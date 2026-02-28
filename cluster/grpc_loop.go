@@ -5,6 +5,8 @@ import "time"
 // grpcLoop receive all rpc requests or responses
 // from other nodes and also client commands
 func (c *Cluster) grpcLoop() {
+	tickerServicePortsDiscovery := time.NewTicker(c.servicePortsDiscoveryTimer)
+	defer tickerServicePortsDiscovery.Stop()
 	tickerNodePolling := time.NewTicker(c.nodePollingTimer)
 	defer tickerNodePolling.Stop()
 	tickerNodeRegister := time.NewTicker(c.nodeRegisterTimer)
@@ -20,6 +22,11 @@ func (c *Cluster) grpcLoop() {
 			c.drainRCVServiceNodeRegister()
 			c.drainRespServiceNodeRegister()
 			return
+
+		case <-tickerServicePortsDiscovery.C:
+			if !c.dev {
+				c.reqServicePortsDiscovery()
+			}
 
 		case data, ok := <-c.rpcServicePortsDiscoveryChanReq:
 			if ok {

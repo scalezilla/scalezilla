@@ -222,6 +222,10 @@ type Cluster struct {
 	// bootstrapExpectedSize variable
 	checkBootstrapSizeDuration time.Duration
 
+	// servicePortsDiscoveryTimer is the frequency at which the node
+	// will send service port discovery rpc request to other nodes
+	servicePortsDiscoveryTimer time.Duration
+
 	// nodePollingTimer is the frequency at which the node
 	// will send node polling rpc request to other nodes
 	nodePollingTimer time.Duration

@@ -59,6 +59,7 @@ func (c *Cluster) reqServicePortsDiscovery() {
 			PortGRPC: uint32(c.config.GRPCPort),
 			PortRaft: uint32(c.config.RaftGRPCPort),
 			IsVoter:  c.isVoter,
+			Members:  c.members_grpc,
 		},
 		Timeout:      time.Second,
 		ResponseChan: c.rpcServicePortsDiscoveryChanResp,

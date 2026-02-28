@@ -17,7 +17,7 @@ func (c *Cluster) rcvServicePortsDiscovery(data RPCRequest) {
 		if c.isVoter && !c.bootstrapExpectedSizeReach.Load() {
 			c.bootstrapExpectedSize.Add(1)
 		}
-		if !c.isVoter {
+		if !c.isVoter && !c.clientContactedServer.Load() {
 			c.clientContactedServer.Store(true)
 		}
 		c.nodeMap[request.Id] = &nodeMap{
@@ -32,6 +32,8 @@ func (c *Cluster) rcvServicePortsDiscovery(data RPCRequest) {
 	}
 	c.nodeMapMu.Unlock()
 
+	c.updateGRPCMembers(fmt.Sprintf("%s:%d", request.Address, request.PortGrpc), request.Members)
+
 	data.ResponseChan <- RPCResponse{
 		Response: &scalezillapb.ServicePortsDiscoveryRequestReply{
 			Address:  c.config.HostIPAddress,
@@ -41,6 +43,7 @@ func (c *Cluster) rcvServicePortsDiscovery(data RPCRequest) {
 			PortRaft: uint32(c.config.RaftGRPCPort),
 			IsVoter:  c.isVoter,
 			NodePool: c.nodePool,
+			Members:  c.members_grpc,
 		},
 	}
 }

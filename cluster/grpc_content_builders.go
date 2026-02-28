@@ -14,6 +14,7 @@ func makeServicePortsDiscoveryRequest(data RPCServicePortsDiscoveryRequest) *sca
 		PortRaft: data.PortRaft,
 		IsVoter:  data.IsVoter,
 		NodePool: data.NodePool,
+		Members:  data.Members,
 	}
 }
 
@@ -30,6 +31,7 @@ func makeServicePortsDiscoveryResponse(data *scalezillapb.ServicePortsDiscoveryR
 		PortRaft: data.PortRaft,
 		IsVoter:  data.IsVoter,
 		NodePool: data.NodePool,
+		Members:  data.Members,
 	}
 }
 

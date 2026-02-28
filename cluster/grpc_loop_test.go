@@ -14,10 +14,11 @@ func TestCluster_grpc_loop(t *testing.T) {
 	assert := assert.New(t)
 
 	t.Run("grpc_loop", func(t *testing.T) {
-		cfg := basicClusterConfig{randomPort: true, dev: true}
-		cluster := makeBasicCluster(cfg)
+		clusters := makeSizedCluster(sizedClusterConfig{})
+		cluster := clusters[0]
 		ctx, cancel := context.WithCancel(context.Background())
 		cluster.ctx = ctx
+		cluster.servicePortsDiscoveryTimer = 50 * time.Millisecond
 		cluster.wg.Go(cluster.grpcLoop)
 
 		responseChan := make(chan RPCResponse, 1)

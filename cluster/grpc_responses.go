@@ -1,6 +1,10 @@
 package cluster
 
-import "github.com/scalezilla/scalezilla/osdiscovery"
+import (
+	"fmt"
+
+	"github.com/scalezilla/scalezilla/osdiscovery"
+)
 
 // respServicePortsDiscovery will receive response from reqServicePortsDiscovery
 func (c *Cluster) respServicePortsDiscovery(data RPCResponse) {
@@ -8,15 +12,14 @@ func (c *Cluster) respServicePortsDiscovery(data RPCResponse) {
 		return
 	}
 
-	response := data.Response.(RPCServicePortsDiscoveryResponse)
-	if response != (RPCServicePortsDiscoveryResponse{}) {
+	if response, ok := data.Response.(RPCServicePortsDiscoveryResponse); ok {
 		c.logger.Debug().Msgf("discovery response from address %s id %s node pool %s http port %d grpc port %d raft port %d isVoter %t bootstrapExpectedSize %d", response.Address, response.ID, response.NodePool, response.PortHTTP, response.PortGRPC, response.PortRaft, response.IsVoter, c.bootstrapExpectedSize.Load())
 		c.nodeMapMu.Lock()
 		if _, ok := c.nodeMap[response.ID]; !ok {
 			if c.isVoter && !c.bootstrapExpectedSizeReach.Load() {
 				c.bootstrapExpectedSize.Add(1)
 			}
-			if !c.isVoter {
+			if !c.isVoter && !c.clientContactedServer.Load() {
 				c.clientContactedServer.Store(true)
 			}
 			c.nodeMap[response.ID] = &nodeMap{
@@ -30,6 +33,8 @@ func (c *Cluster) respServicePortsDiscovery(data RPCResponse) {
 			}
 		}
 		c.nodeMapMu.Unlock()
+
+		c.updateGRPCMembers(fmt.Sprintf("%s:%d", response.Address, response.PortGRPC), response.Members)
 	}
 }
 
@@ -39,8 +44,7 @@ func (c *Cluster) respServiceNodePolling(data RPCResponse) {
 		return
 	}
 
-	response, ok := data.Response.(RPCServiceNodePollingResponse)
-	if ok {
+	if response, ok := data.Response.(RPCServiceNodePollingResponse); ok {
 		c.nodeMapMu.Lock()
 		if _, ok := c.nodeMap[response.ID]; ok {
 			c.nodeMap[response.ID].SystemInfo.OS = &osdiscovery.OS{

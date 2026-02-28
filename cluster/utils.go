@@ -28,3 +28,12 @@ func (c *Cluster) getServiceAddressFromRaft(address string) (string, bool) {
 	c.nodeMapMu.RUnlock()
 	return "", false
 }
+
+// updateGRPCMembers updates members_grpc slice
+func (c *Cluster) updateGRPCMembers(address string, members []string) {
+	for _, m := range slices.Compact(slices.Concat(c.members_grpc, members, []string{address})) {
+		if !slices.Contains(c.members_grpc, m) {
+			c.members_grpc = append(c.members_grpc, m)
+		}
+	}
+}
