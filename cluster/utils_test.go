@@ -31,4 +31,15 @@ func TestCluster_utils(t *testing.T) {
 		_, ok = cluster.getServiceAddressFromRaft(cluster.members_raft[0])
 		assert.Equal(true, ok)
 	})
+
+	t.Run("update_grpc_members", func(t *testing.T) {
+		clusters := makeSizedCluster(sizedClusterConfig{})
+		cluster := clusters[0]
+		defer func() {
+			_ = os.RemoveAll(cluster.config.DataDir)
+		}()
+
+		cluster.updateGRPCMembers("10.0.0.1:15001", cluster.members_grpc)
+		assert.Equal(3, len(cluster.members_grpc))
+	})
 }

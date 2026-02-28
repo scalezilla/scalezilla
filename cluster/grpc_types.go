@@ -38,6 +38,7 @@ type RPCServicePortsDiscoveryRequest struct {
 	Address, ID, NodePool        string
 	PortHTTP, PortGRPC, PortRaft uint32
 	IsVoter                      bool
+	Members                      []string
 }
 
 // RPCServicePortsDiscoveryResponse holds the response from RPCServicePortsDiscoveryRequest
@@ -45,6 +46,7 @@ type RPCServicePortsDiscoveryResponse struct {
 	Address, ID, NodePool        string
 	PortHTTP, PortGRPC, PortRaft uint32
 	IsVoter                      bool
+	Members                      []string
 }
 
 // RPCServiceNodePollingRequest holds the requirements to perform node polling

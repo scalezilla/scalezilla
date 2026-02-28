@@ -14,13 +14,14 @@ https://protobuf.dev/programming-guides/proto3/
 */
 
 message ServicePortsDiscoveryRequestReply {
-  string address   = 1;
-  string id        = 2;
-  uint32 port_http = 3;
-  uint32 port_grpc = 4;
-  uint32 port_raft = 5;
-  bool   is_voter  = 6;
-  string node_pool = 7;
+  string address          = 1;
+  string id               = 2;
+  uint32 port_http        = 3;
+  uint32 port_grpc        = 4;
+  uint32 port_raft        = 5;
+  bool   is_voter         = 6;
+  string node_pool        = 7;
+  repeated string members = 20;
 }
 
 message ServiceNodePollingRequestReply {

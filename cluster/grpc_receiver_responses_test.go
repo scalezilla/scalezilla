@@ -31,6 +31,7 @@ func TestCluster_grpc_receiver_responses(t *testing.T) {
 				PortRaft: uint32(defaultRaftGRPCPort),
 				IsVoter:  cluster.isVoter,
 				NodePool: cluster.nodePool,
+				Members:  cluster.members_grpc,
 			},
 			ResponseChan: responseChan,
 		}
@@ -58,6 +59,7 @@ func TestCluster_grpc_receiver_responses(t *testing.T) {
 				PortRaft: uint32(defaultRaftGRPCPort),
 				IsVoter:  cluster.isVoter,
 				NodePool: cluster.nodePool,
+				Members:  cluster.members_grpc,
 			},
 			ResponseChan: responseChan,
 		}

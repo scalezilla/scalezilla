@@ -30,6 +30,7 @@ type ServicePortsDiscoveryRequestReply struct {
 	PortRaft      uint32                 `protobuf:"varint,5,opt,name=port_raft,json=portRaft,proto3" json:"port_raft,omitempty"`
 	IsVoter       bool                   `protobuf:"varint,6,opt,name=is_voter,json=isVoter,proto3" json:"is_voter,omitempty"`
 	NodePool      string                 `protobuf:"bytes,7,opt,name=node_pool,json=nodePool,proto3" json:"node_pool,omitempty"`
+	Members       []string               `protobuf:"bytes,20,rep,name=members,proto3" json:"members,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -111,6 +112,13 @@ func (x *ServicePortsDiscoveryRequestReply) GetNodePool() string {
 		return x.NodePool
 	}
 	return ""
+}
+
+func (x *ServicePortsDiscoveryRequestReply) GetMembers() []string {
+	if x != nil {
+		return x.Members
+	}
+	return nil
 }
 
 type ServiceNodePollingRequestReply struct {
@@ -409,7 +417,7 @@ var File_scalezillapb_requests_proto protoreflect.FileDescriptor
 
 const file_scalezillapb_requests_proto_rawDesc = "" +
 	"\n" +
-	"\x1bscalezillapb/requests.proto\x12\fscalezillapb\"\xdc\x01\n" +
+	"\x1bscalezillapb/requests.proto\x12\fscalezillapb\"\xf6\x01\n" +
 	"!ServicePortsDiscoveryRequestReply\x12\x18\n" +
 	"\aaddress\x18\x01 \x01(\tR\aaddress\x12\x0e\n" +
 	"\x02id\x18\x02 \x01(\tR\x02id\x12\x1b\n" +
@@ -417,7 +425,8 @@ const file_scalezillapb_requests_proto_rawDesc = "" +
 	"\tport_grpc\x18\x04 \x01(\rR\bportGrpc\x12\x1b\n" +
 	"\tport_raft\x18\x05 \x01(\rR\bportRaft\x12\x19\n" +
 	"\bis_voter\x18\x06 \x01(\bR\aisVoter\x12\x1b\n" +
-	"\tnode_pool\x18\a \x01(\tR\bnodePool\"\x84\x06\n" +
+	"\tnode_pool\x18\a \x01(\tR\bnodePool\x12\x18\n" +
+	"\amembers\x18\x14 \x03(\tR\amembers\"\x84\x06\n" +
 	"\x1eServiceNodePollingRequestReply\x12\x18\n" +
 	"\aaddress\x18\x01 \x01(\tR\aaddress\x12\x0e\n" +
 	"\x02id\x18\x02 \x01(\tR\x02id\x12\x17\n" +

@@ -119,13 +119,17 @@ func TestCluster_grpc_server(t *testing.T) {
 
 				case _, ok := <-cluster.rpcServicePortsDiscoveryChanResp:
 					if ok {
-						cluster.bootstrapExpectedSize.Add(1)
+						cluster.bootstrapExpectedSize.Add(3)
 					}
 				}
 			}
 		})
 
 		go cluster.checkBootstrapSize()
+		go func() {
+			time.Sleep(100 * time.Millisecond)
+			cluster.rpcServicePortsDiscoveryChanResp <- RPCResponse{}
+		}()
 		go func() {
 			time.Sleep(2 * time.Second)
 			cancel()
@@ -163,6 +167,10 @@ func TestCluster_grpc_server(t *testing.T) {
 		})
 
 		go cluster.checkBootstrapSize()
+		go func() {
+			time.Sleep(100 * time.Millisecond)
+			cluster.rpcServicePortsDiscoveryChanResp <- RPCResponse{}
+		}()
 		go func() {
 			time.Sleep(2 * time.Second)
 			cancel()
