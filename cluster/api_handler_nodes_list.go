@@ -61,6 +61,7 @@ func (cc *Cluster) nodesList(c *gin.Context) {
 			// the following must be stay like so to make sure we have
 			// the right leader on the right node
 			if v.ID == leaderId {
+				voter = "server"
 				leader = true
 			}
 
