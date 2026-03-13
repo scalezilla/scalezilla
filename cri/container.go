@@ -60,7 +60,9 @@ func (c *CRI) CreateContainer(ctx context.Context, spec CreateContainerSpec) err
 			Msg("Fail to connect to containerd socket")
 		return err
 	}
-	defer client.Close()
+	defer func() {
+		_ = client.Close()
+	}()
 
 	cctx := namespaces.WithNamespace(ctx, spec.Namespace)
 	image, err := client.Pull(cctx, spec.Image.Image)
@@ -132,7 +134,9 @@ func (c *CRI) ListContainer(ctx context.Context, namespace string) ([]ContainerL
 			Msg("Fail to connect to containerd socket")
 		return nil, err
 	}
-	defer client.Close()
+	defer func() {
+		_ = client.Close()
+	}()
 
 	cctx := namespaces.WithNamespace(ctx, namespace)
 	containers, err := client.Containers(cctx)
@@ -206,7 +210,9 @@ func (c *CRI) DeleteContainer(ctx context.Context, namespace, containerID string
 			Msg("Fail to connect to containerd socket")
 		return err
 	}
-	defer client.Close()
+	defer func() {
+		_ = client.Close()
+	}()
 
 	cctx := namespaces.WithNamespace(ctx, namespace)
 	container, err := client.LoadContainer(cctx, containerID)
