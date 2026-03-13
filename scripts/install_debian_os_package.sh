@@ -38,12 +38,3 @@ wget -P /tmp -q https://github.com/containernetworking/plugins/releases/download
 tar Cxzvf /opt/cni/bin /tmp/cni-plugins-linux-${ARCH}-v${CNI_VERSION}.tgz
 rm -f /tmp/cni-plugins-linux-${ARCH}-v${CNI_VERSION}.tgz
 
-# https://github.com/kubernetes-sigs/cri-tools/releases
-CRICTL_VERSION=v1.35.0
-wget -P /tmp -q https://github.com/kubernetes-sigs/cri-tools/releases/download/$CRICTL_VERSION/crictl-$CRICTL_VERSION-linux-${ARCH}.tar.gz
-sudo tar zxvf /tmp/crictl-$CRICTL_VERSION-linux-${ARCH}.tar.gz -C /usr/local/bin
-rm -f /tmp/crictl-$CRICTL_VERSION-linux-${ARCH}.tar.gz
-cat > /etc/crictl.yaml <<EOF
-runtime-endpoint: unix:///run/containerd/containerd.sock
-image-endpoint: unix:///run/containerd/containerd.sock
-EOF
