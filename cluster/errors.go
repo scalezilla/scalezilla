@@ -50,6 +50,18 @@ var (
 
 	// ErrWrongFormat is triggered when the wrong format output is passed
 	ErrWrongFormat = errors.New("wrong format")
+
+	// ErrDeploymentPayload is triggered when the posting empty payload to deployments endpoints
+	ErrDeploymentPayload = errors.New("deployment payload cannot be empty")
+
+	// ErrDeploymentNameInvalid is triggered when deployment name is invalid
+	ErrDeploymentNameInvalid = errors.New("deployment name must match ^[A-Za-z][A-Za-z0-9-]{5,62}")
+
+	// ErrPodNameInvalid is triggered when pod name is invalid
+	ErrPodNameInvalid = errors.New("pod name must match ^[A-Za-z][A-Za-z0-9-]{5,62}")
+
+	// ErrContainerNameInvalid is triggered when container name is invalid
+	ErrContainerNameInvalid = errors.New("container name must match ^[A-Za-z][A-Za-z0-9-]{5,62}")
 )
 
 // respError is used to decode errors
