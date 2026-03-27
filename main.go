@@ -23,6 +23,7 @@ func main() {
 			commands.Agent(),
 			commands.Bootstrap(),
 			commands.Nodes(),
+			commands.Deployment(),
 		},
 	}
 
