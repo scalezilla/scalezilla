@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 	"strconv"
 )
 
@@ -87,6 +88,52 @@ func APICallsNodesList(config NodesListHTTPConfig) error {
 			return nil
 		}
 		printTableNodesList(body)
+		return nil
+	}
+
+	return decodeError(body)
+}
+
+// APICallsDeploymentApply is used by cli command to apply a new deployment
+func APICallsDeploymentApply(config DeploymentApplyHTTPConfig) error {
+	if err := parseDeploymentFileSyntax(config.File); err != nil {
+		return err
+	}
+
+	var (
+		data []byte
+		err  error
+	)
+	if config.osReadFile == nil {
+		data, err = os.ReadFile(config.File)
+	} else {
+		data, err = config.osReadFile(config.File)
+	}
+
+	if err != nil {
+		return err
+	}
+
+	path := "/api/v1/deployment/apply"
+	url := fmt.Sprintf("%s%s", config.HTTPAddress, path)
+
+	b, _ := json.Marshal(APIDeploymentApplyRequest{HCLContent: string(data)})
+	reqBody := bytes.NewBuffer(b)
+	req, _ := http.NewRequest("POST", url, reqBody)
+	req.Header.Add("Content-Length", strconv.Itoa(reqBody.Len()))
+	req.Header.Add("Content-Type", "application/json; charset=utf-8")
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		_ = resp.Body.Close()
+	}()
+	body, _ := io.ReadAll(resp.Body)
+
+	if resp.StatusCode == 200 {
+		fmt.Println(string(body))
 		return nil
 	}
 

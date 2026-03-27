@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -166,5 +168,83 @@ func TestCluster_api_calls_command(t *testing.T) {
 		config := NodesListHTTPConfig{}
 		config.HTTPAddress = "htttp://127.0.0.1"
 		assert.Error(APICallsNodesList(config))
+	})
+
+	t.Run("deployment_apply", func(t *testing.T) {
+		tests := []struct {
+			makeError, setError bool
+			statusCode          int
+			token               string
+			file                string
+			response            string
+		}{
+			{
+				statusCode: 200,
+				response:   `OK`,
+				file:       "testdata/deployments/basic_success.hcl",
+			},
+			{
+				setError:  true,
+				makeError: true,
+				file:      "testdata/deployments/basic_success.hcl",
+				response:  `{"error", "Syntax error"}`,
+			},
+			{
+				makeError: true,
+				file:      "testdata/deployments/error_malformed.hcl",
+				response:  `{"error", "Syntax error"}`,
+			},
+			{
+				makeError:  true,
+				statusCode: 500,
+				file:       "testdata/deployments/basic_success.hcl",
+				response:   `{"error", "Internal Server Error"}`,
+			},
+		}
+
+		for _, tc := range tests {
+			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				w.WriteHeader(tc.statusCode)
+				if tc.makeError {
+					_, err := fmt.Fprintln(w, tc.response)
+					assert.Nil(err)
+					return
+				}
+				_, err := fmt.Fprintln(w, tc.response)
+				assert.Nil(err)
+			}))
+			defer server.Close()
+
+			config := DeploymentApplyHTTPConfig{
+				Token: tc.token,
+				File:  tc.file,
+			}
+			config.HTTPAddress = server.URL
+			if tc.file != "" {
+				workingDir, err := os.Getwd()
+				assert.Nil(err)
+				config.File = filepath.Join(workingDir, tc.file)
+			}
+
+			if tc.setError {
+				config.osReadFile = func(name string) ([]byte, error) {
+					return nil, fmt.Errorf("os read file error")
+				}
+			}
+
+			if tc.makeError {
+				assert.Error(APICallsDeploymentApply(config))
+			} else {
+				assert.Nil(APICallsDeploymentApply(config))
+			}
+		}
+
+		// provoke error
+		config := DeploymentApplyHTTPConfig{}
+		workingDir, err := os.Getwd()
+		assert.Nil(err)
+		config.File = filepath.Join(workingDir, "testdata/deployments/basic_success.hcl")
+		config.HTTPAddress = "htttp://127.0.0.1"
+		assert.Error(APICallsDeploymentApply(config))
 	})
 }
