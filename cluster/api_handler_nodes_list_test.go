@@ -21,7 +21,6 @@ func TestCluster_api_handler_nodes_list(t *testing.T) {
 			expectedBody          string
 			mockRaftyErrorMessage error
 			bootstrapped          bool
-			header                map[string]string
 			body                  string
 			errorSubmitCommand    bool
 			dev                   bool
@@ -96,7 +95,7 @@ func TestCluster_api_handler_nodes_list(t *testing.T) {
 				// the following is only a fix only for CI
 				cluster.systemInfo.OS.Hostname = "dev"
 				router := cluster.newApiRouters()
-				w := makeHTTPRequestRecorder(router, tc.method, tc.uri, tc.header, tc.body)
+				w := makeHTTPRequestRecorder(router, tc.method, tc.uri, nil, tc.body)
 
 				assert.Equal(tc.expectedStatusCode, w.Code, fmt.Sprintf("Failed to perform http %s request", tc.method))
 				assert.Contains(w.Body.String(), tc.expectedBody, "Failed to get right body content")
@@ -181,7 +180,7 @@ func TestCluster_api_handler_nodes_list(t *testing.T) {
 				cluster.config.Hostname = "fake"
 
 				router := cluster.newApiRouters()
-				w := makeHTTPRequestRecorder(router, tc.method, tc.uri, tc.header, tc.body)
+				w := makeHTTPRequestRecorder(router, tc.method, tc.uri, nil, tc.body)
 
 				assert.Equal(tc.expectedStatusCode, w.Code, fmt.Sprintf("Failed to perform http %s request", tc.method))
 				assert.Contains(w.Body.String(), tc.expectedBody, "Failed to get right body content")

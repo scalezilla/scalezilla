@@ -27,8 +27,8 @@ type AclToken struct {
 
 // APINodesListRequest handle request to list cluster nodes
 type APINodesListRequest struct {
-	// Kind is cluster node kind to return when present
-	Kind string `json:"kind" binding:"-"`
+	// Kind is cluster node kind to return when present for GET requests
+	Kind string `form:"kind" binding:"-"`
 }
 
 // APINodesListResponse handle response to list cluster nodes
