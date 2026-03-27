@@ -34,6 +34,34 @@ type CreateContainerSpec struct {
 	DefaultLogPath string
 }
 
+type DeploymentSpec struct {
+	Deployment DeploymentConfigSpec `hcl:"deployment,block"`
+}
+
+type DeploymentConfigSpec struct {
+	Name      string            `hcl:"deployment,label"`
+	Kind      string            `hcl:"kind,optional"`
+	Namespace string            `hcl:"namespace,optional"`
+	Metadata  map[string]string `hcl:"metadata,optional"`
+	Pod       DeploymentPodSpec `hcl:"pod,block"`
+}
+
+type DeploymentPodSpec struct {
+	Name      string                  `hcl:"pod,label"`
+	Container DeploymentContainerSpec `hcl:"container,block"`
+}
+
+type DeploymentContainerSpec struct {
+	Name      string         `hcl:"container,label"`
+	Image     string         `hcl:"image"`
+	Resources *ResourcesSpec `hcl:"resources,block"`
+}
+
+type ResourcesSpec struct {
+	CPU    uint64 `hcl:"cpu"`
+	Memory uint64 `hcl:"memory"`
+}
+
 // ContainerList returns the container with its status
 type ContainerList struct {
 	Namespace string

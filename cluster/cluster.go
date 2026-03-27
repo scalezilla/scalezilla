@@ -4,6 +4,7 @@ import (
 	"net"
 	"time"
 
+	"github.com/scalezilla/scalezilla/cri"
 	"github.com/scalezilla/scalezilla/osdiscovery"
 	"github.com/scalezilla/scalezilla/scalezillapb"
 	"google.golang.org/grpc"
@@ -51,6 +52,10 @@ func NewCluster(config ClusterInitialConfig) (*Cluster, error) {
 	c.raftMetricPrefix = scalezillaAppName
 	c.di.aclTokenEncodeCommandFunc = aclTokenEncodeCommand
 	c.di.sendRPCFunc = c.sendRPC
+
+	// Container Runtime
+	cri := cri.NewCRI(config.Logger)
+	c.di.createContainerFunc = cri.CreateContainer
 
 	c.buildDataDir()
 	if config.Dev {
