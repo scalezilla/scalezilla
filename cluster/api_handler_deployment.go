@@ -1,7 +1,6 @@
 package cluster
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/Lord-Y/rafty"
@@ -21,7 +20,6 @@ func (cc *Cluster) deploymentApply(c *gin.Context) {
 		spec, err := cc.parseDeployment([]byte(req.HCLContent))
 		if err != nil {
 			cc.logger.Error().Err(err).Str("component", "deployment").Msgf("parsing error")
-			fmt.Println("DEPLOY", err.Error())
 			c.JSON(http.StatusBadRequest, gin.H{"error": err})
 			return
 		}
