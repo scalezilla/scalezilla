@@ -133,7 +133,10 @@ func APICallsDeploymentApply(config DeploymentApplyHTTPConfig) error {
 	body, _ := io.ReadAll(resp.Body)
 
 	if resp.StatusCode == 200 {
-		fmt.Println(string(body))
+		if config.OutputFormat == "json" {
+			fmt.Println(string(body))
+			return nil
+		}
 		return nil
 	}
 
