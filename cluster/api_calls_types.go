@@ -6,8 +6,7 @@ import (
 	"github.com/rs/zerolog"
 )
 
-// ClusterHTTPCallBaseConfig is the configuration used by the cli
-// to interact with the cluster
+// ClusterHTTPCallBaseConfig is used by the cli to interact with the cluster
 type ClusterHTTPCallBaseConfig struct {
 	// Logger is the cluster logger
 	Logger *zerolog.Logger
@@ -24,8 +23,7 @@ type ClusterHTTPCallBaseConfig struct {
 	OutputFormat string
 }
 
-// BootstrapClusterHTTPConfig is the configuration used by the cli
-// to interact with the cluster
+// BootstrapClusterHTTPConfig is used by the cli to interact with the cluster
 type BootstrapClusterHTTPConfig struct {
 	// Token to use to bootstrap the cluster
 	Token string
@@ -34,10 +32,9 @@ type BootstrapClusterHTTPConfig struct {
 	ClusterHTTPCallBaseConfig
 }
 
-// NodesListHTTPConfig is the configuration used by the cli
-// to interact with the cluster nodes
+// NodesListHTTPConfig is used by the cli to interact with the cluster nodes
 type NodesListHTTPConfig struct {
-	// Token to use to bootstrap the cluster
+	// Token to use to interact with the cluster
 	Token string
 
 	// Kind to use to list cluster nodes.
@@ -46,4 +43,20 @@ type NodesListHTTPConfig struct {
 
 	// Default config
 	ClusterHTTPCallBaseConfig
+}
+
+// DeploymentApplyHTTPConfig is used by the cli
+// to interact with the server leader node to apply a new deployment
+type DeploymentApplyHTTPConfig struct {
+	// Token to use to interact with the cluster
+	Token string
+
+	// File to use to apply new deployment
+	File string
+
+	// Default config
+	ClusterHTTPCallBaseConfig
+
+	// osReadFile is a wrapper to osReadFile
+	osReadFile func(name string) ([]byte, error)
 }
