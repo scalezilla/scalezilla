@@ -49,6 +49,13 @@ func TestCluster_api_handler_deployment(t *testing.T) {
 				createContainerError: true,
 			},
 			{
+				method:             "POST",
+				uri:                "/api/v1/deployment/apply",
+				file:               "error_bad_deployment_name_rfc.hcl",
+				expectedStatusCode: 400,
+				raftIsLeader:       true,
+			},
+			{
 				method:               "POST",
 				uri:                  "/api/v1/deployment/apply",
 				file:                 "basic_success.hcl",
