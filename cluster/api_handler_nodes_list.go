@@ -32,7 +32,7 @@ func (cc *Cluster) nodesList(c *gin.Context) {
 	}
 
 	var req APINodesListRequest
-	_ = c.Bind(&req)
+	_ = c.BindJSON(&req)
 
 	hasLeader, _, leaderId := cc.rafty.Leader()
 	if hasLeader {
