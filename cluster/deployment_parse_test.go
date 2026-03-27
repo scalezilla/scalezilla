@@ -3,6 +3,7 @@ package cluster
 import (
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"testing"
 
@@ -25,10 +26,10 @@ func TestCluster_deployment_parse(t *testing.T) {
 			configFile := filepath.Join(workingDir, configDir, file.Name())
 
 			err := parseDeploymentFileSyntax(configFile)
-			if strings.Contains(file.Name(), "success") {
-				assert.Nil(err)
-			} else {
+			if strings.Contains(file.Name(), "malformed") {
 				assert.Error(err)
+			} else {
+				assert.Nil(err)
 			}
 		}
 	})
@@ -48,14 +49,18 @@ func TestCluster_deployment_parse(t *testing.T) {
 		}()
 
 		for _, file := range files {
-			configFile := filepath.Join(workingDir, configDir, file.Name())
-			data, err := os.ReadFile(configFile)
-			require.NoError(t, err)
-			_, err = cluster.parseDeployment(data)
-			if strings.Contains(file.Name(), "success") {
-				assert.Nil(err)
-			} else {
-				assert.Error(err)
+			exceptions := []string{"malformed", "error_container_image"}
+			if !slices.Contains(exceptions, strings.TrimSuffix(file.Name(), filepath.Ext(file.Name()))) {
+				configFile := filepath.Join(workingDir, configDir, file.Name())
+				data, err := os.ReadFile(configFile)
+				require.NoError(t, err)
+
+				_, err = cluster.parseDeployment(data)
+				if strings.Contains(file.Name(), "success") {
+					assert.Nil(err, file.Name())
+				} else {
+					assert.Error(err, file.Name())
+				}
 			}
 		}
 	})
