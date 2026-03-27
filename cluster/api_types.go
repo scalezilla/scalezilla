@@ -28,7 +28,7 @@ type AclToken struct {
 // APINodesListRequest handle request to list cluster nodes
 type APINodesListRequest struct {
 	// Kind is cluster node kind to return when present
-	Kind string `form:"kind" binding:"-"`
+	Kind string `json:"kind" binding:"-"`
 }
 
 // APINodesListResponse handle response to list cluster nodes
@@ -50,4 +50,15 @@ type APINodesListResponse struct {
 
 	// NodePool is the node pool
 	NodePool string `json:"nodePool"`
+}
+
+// APIDeploymentApplyRequest handle request to create deployment
+type APIDeploymentApplyRequest struct {
+	// HCLContent is the payload to use to create a new deployment
+	HCLContent string `json:"hcl_content" binding:"required"`
+}
+
+// APIGenericResponse handle generic success response
+type APIGenericResponse struct {
+	Message string `json:"message"`
 }

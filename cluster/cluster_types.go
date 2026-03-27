@@ -10,6 +10,7 @@ import (
 
 	"github.com/Lord-Y/rafty"
 	"github.com/rs/zerolog"
+	"github.com/scalezilla/scalezilla/cri"
 	"github.com/scalezilla/scalezilla/osdiscovery"
 	"github.com/scalezilla/scalezilla/scalezillapb"
 	"google.golang.org/grpc"
@@ -290,6 +291,9 @@ type dependencyInjections struct {
 
 	// aclTokenEncodeCommandFunc is used as a dependency injection
 	aclTokenEncodeCommandFunc func(cmd aclTokenCommand, w io.Writer) error
+
+	// CreateContainerFunc is used as a dependency injection
+	createContainerFunc func(ctx context.Context, spec cri.CreateContainerSpec) error
 }
 
 // httpServer is an interface implements http.Server requirements.
