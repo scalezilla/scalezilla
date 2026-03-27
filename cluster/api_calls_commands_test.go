@@ -177,11 +177,18 @@ func TestCluster_api_calls_command(t *testing.T) {
 			token               string
 			file                string
 			response            string
+			format              string
 		}{
 			{
 				statusCode: 200,
 				response:   `OK`,
 				file:       "testdata/deployments/basic_success.hcl",
+			},
+			{
+				statusCode: 200,
+				response:   `OK`,
+				file:       "testdata/deployments/basic_success.hcl",
+				format:     "json",
 			},
 			{
 				setError:  true,
@@ -220,6 +227,7 @@ func TestCluster_api_calls_command(t *testing.T) {
 				File:  tc.file,
 			}
 			config.HTTPAddress = server.URL
+			config.OutputFormat = tc.format
 			if tc.file != "" {
 				workingDir, err := os.Getwd()
 				assert.Nil(err)

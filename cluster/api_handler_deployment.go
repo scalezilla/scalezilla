@@ -40,7 +40,7 @@ func (cc *Cluster) deploymentApply(c *gin.Context) {
 			return
 		}
 
-		c.JSON(http.StatusOK, APIGenericResponse{Message: "OK"})
+		c.JSON(http.StatusOK, APIGenericResponse{Message: "deployment successful"})
 		return
 	}
 

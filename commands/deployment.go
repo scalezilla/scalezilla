@@ -53,6 +53,13 @@ func deploymentApply() *cli.Command {
 				Required:    true,
 				Destination: &app.File,
 			},
+			&cli.StringFlag{
+				Name:        "output",
+				Aliases:     []string{"o"},
+				Usage:       "output format can only be table or json",
+				Value:       "table",
+				Destination: &app.OutputFormat,
+			},
 		},
 		Action: func(ctx context.Context, _ *cli.Command) error {
 			sigCtx, stop := cluster.BuildSignal(ctx)
