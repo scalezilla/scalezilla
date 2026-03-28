@@ -35,6 +35,7 @@ type ImageSpec struct {
 type CreateContainerSpec struct {
 	Namespace      string
 	ContainerID    string
+	Labels         map[string]string
 	Image          ImageSpec
 	DefaultLogPath string
 }
@@ -89,7 +90,7 @@ type ContainerRuntime interface {
 // It keeps unit tests decoupled from the concrete containerd client.
 type runtimeClient interface {
 	Pull(ctx context.Context, ref string) (runtimeImage, error)
-	NewContainer(ctx context.Context, id string, image runtimeImage) (runtimeContainer, error)
+	NewContainer(ctx context.Context, id string, image runtimeImage, labels, additionalContainerLabels map[string]string) (runtimeContainer, error)
 	Containers(ctx context.Context) ([]runtimeContainer, error)
 	ListTasks(ctx context.Context) ([]runtimeTaskProcess, error)
 	LoadContainer(ctx context.Context, id string) (runtimeContainer, error)

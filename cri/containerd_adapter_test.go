@@ -105,7 +105,7 @@ func TestContainerdRuntimeClient(t *testing.T) {
 	t.Run("new container wrong image type", func(t *testing.T) {
 		client := &containerdRuntimeClient{client: &fakeContainerdClientAPI{}}
 
-		container, err := client.NewContainer(context.Background(), "c1", fakeImage{})
+		container, err := client.NewContainer(context.Background(), "c1", fakeImage{}, nil, nil)
 		require.Nil(t, container)
 		require.EqualError(t, err, "unexpected runtime image type cri.fakeImage")
 	})
@@ -114,7 +114,7 @@ func TestContainerdRuntimeClient(t *testing.T) {
 		wantErr := errors.New("new container failed")
 		client := &containerdRuntimeClient{client: &fakeContainerdClientAPI{newContainerErr: wantErr}}
 
-		container, err := client.NewContainer(context.Background(), "c1", containerdImage{})
+		container, err := client.NewContainer(context.Background(), "c1", containerdImage{}, nil, nil)
 		require.Nil(t, container)
 		require.ErrorIs(t, err, wantErr)
 	})
@@ -124,7 +124,7 @@ func TestContainerdRuntimeClient(t *testing.T) {
 		fakeAPI := &fakeContainerdClientAPI{newContainer: mockContainer}
 		client := &containerdRuntimeClient{client: fakeAPI}
 
-		container, err := client.NewContainer(context.Background(), "c1", containerdImage{})
+		container, err := client.NewContainer(context.Background(), "c1", containerdImage{}, nil, nil)
 		require.NoError(t, err)
 		require.IsType(t, &containerdRuntimeContainer{}, container)
 		require.Equal(t, "c1", fakeAPI.newContainerID)

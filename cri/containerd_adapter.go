@@ -34,7 +34,7 @@ func (c *containerdRuntimeClient) Pull(ctx context.Context, ref string) (runtime
 }
 
 // NewContainer creates a containerd container and wraps it for runtimeClient use.
-func (c *containerdRuntimeClient) NewContainer(ctx context.Context, id string, image runtimeImage) (runtimeContainer, error) {
+func (c *containerdRuntimeClient) NewContainer(ctx context.Context, id string, image runtimeImage, labels, additionalContainerLabels map[string]string) (runtimeContainer, error) {
 	containerdImage, ok := image.(containerdImage)
 	if !ok {
 		return nil, fmt.Errorf("unexpected runtime image type %T", image)
@@ -46,6 +46,8 @@ func (c *containerdRuntimeClient) NewContainer(ctx context.Context, id string, i
 		containerd.WithImage(containerdImage.image),
 		containerd.WithNewSnapshot(fmt.Sprintf("snapshot-%s", id), containerdImage.image),
 		containerd.WithNewSpec(oci.WithImageConfig(containerdImage.image)),
+		containerd.WithContainerLabels(labels),
+		containerd.WithAdditionalContainerLabels(additionalContainerLabels),
 	)
 	if err != nil {
 		return nil, err
