@@ -1,6 +1,7 @@
 package cluster
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/Lord-Y/rafty"
@@ -28,11 +29,12 @@ func (cc *Cluster) deploymentApply(c *gin.Context) {
 		// as we need to mature the deployment
 		cspec := cri.CreateContainerSpec{
 			Namespace:   spec.Deployment.Namespace,
-			ContainerID: spec.Deployment.Pod.Container.Name,
+			ContainerID: fmt.Sprintf("%s-%s", spec.Deployment.Name, spec.Deployment.Pod.Container.Name),
 			Image: cri.ImageSpec{
 				Image: spec.Deployment.Pod.Container.Image,
 			},
 			DefaultLogPath: "/var/log/containerd",
+			Labels:         spec.Deployment.Metadata,
 		}
 
 		if err := cc.di.createContainerFunc(cc.ctx, cspec); err != nil {

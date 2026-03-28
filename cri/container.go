@@ -74,7 +74,11 @@ func (c *CRI) CreateContainer(ctx context.Context, spec CreateContainerSpec) err
 		return err
 	}
 
-	container, err := client.NewContainer(cctx, spec.ContainerID, image)
+	additionalContainerLabels := map[string]string{
+		"namespace": spec.Namespace,
+	}
+
+	container, err := client.NewContainer(cctx, spec.ContainerID, image, spec.Labels, additionalContainerLabels)
 	if err != nil {
 		c.log.Error().Err(err).
 			Str("namespace", spec.Namespace).

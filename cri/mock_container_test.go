@@ -28,7 +28,7 @@ func (f *fakeClient) Pull(ctx context.Context, ref string) (runtimeImage, error)
 	return f.pullImage, f.pullErr
 }
 
-func (f *fakeClient) NewContainer(ctx context.Context, id string, image runtimeImage) (runtimeContainer, error) {
+func (f *fakeClient) NewContainer(ctx context.Context, id string, image runtimeImage, labels, additionalContainerLabels map[string]string) (runtimeContainer, error) {
 	f.newContainerID = id
 	f.newContainerImg = image
 	return f.newContainer, f.newContainerErr
