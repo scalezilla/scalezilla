@@ -64,7 +64,7 @@ func (c *CRI) CreateContainer(ctx context.Context, spec CreateContainerSpec) err
 		_ = client.Close()
 	}()
 
-	cctx := namespaces.WithNamespace(ctx, spec.Namespace)
+	cctx := namespaces.WithNamespace(ctx, constainerdNamespace)
 	image, err := client.Pull(cctx, spec.Image.Image)
 	if err != nil {
 		c.log.Error().Err(err).
@@ -138,7 +138,7 @@ func (c *CRI) ListContainer(ctx context.Context, namespace string) ([]ContainerL
 		_ = client.Close()
 	}()
 
-	cctx := namespaces.WithNamespace(ctx, namespace)
+	cctx := namespaces.WithNamespace(ctx, constainerdNamespace)
 	containers, err := client.Containers(cctx)
 	if err != nil {
 		c.log.Error().Err(err).
@@ -214,7 +214,7 @@ func (c *CRI) DeleteContainer(ctx context.Context, namespace, containerID string
 		_ = client.Close()
 	}()
 
-	cctx := namespaces.WithNamespace(ctx, namespace)
+	cctx := namespaces.WithNamespace(ctx, constainerdNamespace)
 	container, err := client.LoadContainer(cctx, containerID)
 	if err != nil {
 		c.log.Error().Err(err).
