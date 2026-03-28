@@ -10,8 +10,13 @@ import (
 	"github.com/rs/zerolog"
 )
 
-// containerdAddress is containerd socket address
-const containerdAddress = "/run/containerd/containerd.sock"
+const (
+	// containerdAddress is containerd socket address
+	containerdAddress = "/run/containerd/containerd.sock"
+
+	// constainerdNamespace is the containerd namespace used by scalezilla
+	constainerdNamespace = "scalezilla"
+)
 
 // CRI is used by NewCRI
 type CRI struct {
