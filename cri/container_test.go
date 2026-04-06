@@ -30,7 +30,7 @@ func TestCRI_CreateContainer(t *testing.T) {
 		DefaultLogPath: "/tmp/containerd",
 	}
 
-	t.Run("client error", func(t *testing.T) {
+	t.Run("client_error", func(t *testing.T) {
 		wantErr := errors.New("dial failed")
 		cri := &CRI{
 			log: testLogger(),
@@ -43,7 +43,7 @@ func TestCRI_CreateContainer(t *testing.T) {
 		require.ErrorIs(t, err, wantErr)
 	})
 
-	t.Run("pull error", func(t *testing.T) {
+	t.Run("pull_error", func(t *testing.T) {
 		wantErr := errors.New("pull failed")
 		client := &fakeClient{pullErr: wantErr}
 		cri := newTestCRI(client)
@@ -53,7 +53,7 @@ func TestCRI_CreateContainer(t *testing.T) {
 		require.True(t, client.closed)
 	})
 
-	t.Run("new container error", func(t *testing.T) {
+	t.Run("new_container_error", func(t *testing.T) {
 		wantErr := errors.New("new container failed")
 		client := &fakeClient{
 			pullImage:       fakeImage{},
@@ -66,7 +66,7 @@ func TestCRI_CreateContainer(t *testing.T) {
 		require.True(t, client.closed)
 	})
 
-	t.Run("mkdir error", func(t *testing.T) {
+	t.Run("mkdir_error", func(t *testing.T) {
 		wantErr := errors.New("mkdir failed")
 		task := &fakeTask{id: "redis-server", waitCh: make(chan runtimeExitStatus, 1)}
 		container := &fakeContainer{id: spec.ContainerID, newTask: task}
@@ -85,7 +85,7 @@ func TestCRI_CreateContainer(t *testing.T) {
 		require.True(t, client.closed)
 	})
 
-	t.Run("new task error", func(t *testing.T) {
+	t.Run("new_task_error", func(t *testing.T) {
 		wantErr := errors.New("new task failed")
 		container := &fakeContainer{id: spec.ContainerID, newTaskErr: wantErr}
 		client := &fakeClient{
@@ -100,7 +100,7 @@ func TestCRI_CreateContainer(t *testing.T) {
 		require.True(t, client.closed)
 	})
 
-	t.Run("wait error", func(t *testing.T) {
+	t.Run("wait_error", func(t *testing.T) {
 		wantErr := errors.New("wait failed")
 		task := &fakeTask{id: "redis-server", waitErr: wantErr}
 		container := &fakeContainer{id: spec.ContainerID, newTask: task}
@@ -116,7 +116,7 @@ func TestCRI_CreateContainer(t *testing.T) {
 		require.True(t, client.closed)
 	})
 
-	t.Run("start error", func(t *testing.T) {
+	t.Run("start_error", func(t *testing.T) {
 		wantErr := errors.New("start failed")
 		task := &fakeTask{
 			id:       "redis-server",
@@ -166,7 +166,7 @@ func TestCRI_CreateContainer(t *testing.T) {
 }
 
 func TestCRI_ListContainer(t *testing.T) {
-	t.Run("client error", func(t *testing.T) {
+	t.Run("client_error", func(t *testing.T) {
 		wantErr := errors.New("dial failed")
 		cri := &CRI{
 			log: testLogger(),
@@ -179,7 +179,7 @@ func TestCRI_ListContainer(t *testing.T) {
 		require.ErrorIs(t, err, wantErr)
 	})
 
-	t.Run("containers error", func(t *testing.T) {
+	t.Run("containers_error", func(t *testing.T) {
 		wantErr := errors.New("list failed")
 		client := &fakeClient{containersErr: wantErr}
 		cri := newTestCRI(client)
@@ -189,7 +189,7 @@ func TestCRI_ListContainer(t *testing.T) {
 		require.True(t, client.closed)
 	})
 
-	t.Run("tasks error", func(t *testing.T) {
+	t.Run("tasks_error", func(t *testing.T) {
 		wantErr := errors.New("tasks failed")
 		client := &fakeClient{
 			containers:   []runtimeContainer{&fakeContainer{id: "c1"}},
@@ -202,15 +202,28 @@ func TestCRI_ListContainer(t *testing.T) {
 		require.True(t, client.closed)
 	})
 
-	t.Run("maps container info and defaults", func(t *testing.T) {
+	t.Run("maps_container_info_and_defaults_namespace_all", func(t *testing.T) {
 		client := &fakeClient{
 			containers: []runtimeContainer{
 				&fakeContainer{
-					id:   "c1",
-					info: runtimeContainerInfo{Image: "redis:alpine", Runtime: "runc"},
+					id: "c1",
+					info: runtimeContainerInfo{
+						Image:   "redis:alpine",
+						Runtime: "runc",
+						Labels: map[string]string{
+							"provider":  "scalezilla",
+							"namespace": "example",
+						},
+					},
 				},
 				&fakeContainer{
-					id:      "c2",
+					id: "c2",
+					info: runtimeContainerInfo{
+						Labels: map[string]string{
+							"provider":  "scalezilla",
+							"namespace": "example",
+						},
+					},
 					infoErr: errors.New("info failed"),
 				},
 			},
@@ -220,12 +233,13 @@ func TestCRI_ListContainer(t *testing.T) {
 		}
 		cri := newTestCRI(client)
 
-		list, err := cri.ListContainer(context.Background(), "example")
+		namespace := "example"
+		list, err := cri.ListContainer(context.Background(), "all")
 		require.NoError(t, err)
 		require.True(t, client.closed)
 		require.Equal(t, []ContainerList{
 			{
-				Namespace: "example",
+				Namespace: namespace,
 				ID:        "c1",
 				PID:       42,
 				Image:     "redis:alpine",
@@ -233,7 +247,62 @@ func TestCRI_ListContainer(t *testing.T) {
 				Status:    "running",
 			},
 			{
-				Namespace: "example",
+				Namespace: namespace,
+				ID:        "c2",
+				PID:       0,
+				Image:     "-",
+				Runtime:   "-",
+				Status:    "-",
+			},
+		}, list)
+	})
+
+	t.Run("maps_container_info_and_defaults_namespace_example", func(t *testing.T) {
+		client := &fakeClient{
+			containers: []runtimeContainer{
+				&fakeContainer{
+					id: "c1",
+					info: runtimeContainerInfo{
+						Image:   "redis:alpine",
+						Runtime: "runc",
+						Labels: map[string]string{
+							"provider":  "scalezilla",
+							"namespace": "example",
+						},
+					},
+				},
+				&fakeContainer{
+					id: "c2",
+					info: runtimeContainerInfo{
+						Labels: map[string]string{
+							"provider":  "scalezilla",
+							"namespace": "example",
+						},
+					},
+					infoErr: errors.New("info failed"),
+				},
+			},
+			taskList: []runtimeTaskProcess{
+				{ID: "c1", PID: 42, Status: "running"},
+			},
+		}
+		cri := newTestCRI(client)
+
+		namespace := "example"
+		list, err := cri.ListContainer(context.Background(), namespace)
+		require.NoError(t, err)
+		require.True(t, client.closed)
+		require.Equal(t, []ContainerList{
+			{
+				Namespace: namespace,
+				ID:        "c1",
+				PID:       42,
+				Image:     "redis:alpine",
+				Runtime:   "runc",
+				Status:    "running",
+			},
+			{
+				Namespace: namespace,
 				ID:        "c2",
 				PID:       0,
 				Image:     "-",
@@ -245,7 +314,7 @@ func TestCRI_ListContainer(t *testing.T) {
 }
 
 func TestCRI_DeleteContainer(t *testing.T) {
-	t.Run("client error", func(t *testing.T) {
+	t.Run("client_error", func(t *testing.T) {
 		wantErr := errors.New("dial failed")
 		cri := &CRI{
 			log: testLogger(),
@@ -258,7 +327,7 @@ func TestCRI_DeleteContainer(t *testing.T) {
 		require.ErrorIs(t, err, wantErr)
 	})
 
-	t.Run("load container error", func(t *testing.T) {
+	t.Run("load_container_error", func(t *testing.T) {
 		wantErr := errors.New("load failed")
 		client := &fakeClient{loadContainerErr: wantErr}
 		cri := newTestCRI(client)
@@ -268,7 +337,7 @@ func TestCRI_DeleteContainer(t *testing.T) {
 		require.True(t, client.closed)
 	})
 
-	t.Run("task lookup error", func(t *testing.T) {
+	t.Run("task_lookup_error", func(t *testing.T) {
 		wantErr := errors.New("task failed")
 		container := &fakeContainer{id: "c1", taskErr: wantErr}
 		client := &fakeClient{loadContainer: container}
@@ -290,7 +359,7 @@ func TestCRI_DeleteContainer(t *testing.T) {
 		require.True(t, container.deleted)
 	})
 
-	t.Run("stop and delete task error", func(t *testing.T) {
+	t.Run("stop_and_delete_task_error", func(t *testing.T) {
 		wantErr := errors.New("status failed")
 		task := &fakeTask{id: "c1", statusErr: wantErr}
 		container := &fakeContainer{id: "c1", task: task}
@@ -303,7 +372,7 @@ func TestCRI_DeleteContainer(t *testing.T) {
 		require.False(t, container.deleted)
 	})
 
-	t.Run("container already deleted", func(t *testing.T) {
+	t.Run("container_already_deleted", func(t *testing.T) {
 		task := &fakeTask{id: "c1", status: runtimeTaskStopped, deleteExitStatus: fakeExitStatus{}}
 		container := &fakeContainer{id: "c1", task: task, deleteErr: errdefs.ErrNotFound}
 		client := &fakeClient{loadContainer: container}
@@ -314,7 +383,7 @@ func TestCRI_DeleteContainer(t *testing.T) {
 		require.True(t, client.closed)
 	})
 
-	t.Run("container delete error", func(t *testing.T) {
+	t.Run("container_delete_error", func(t *testing.T) {
 		wantErr := errors.New("delete failed")
 		task := &fakeTask{id: "c1", status: runtimeTaskStopped, deleteExitStatus: fakeExitStatus{}}
 		container := &fakeContainer{id: "c1", task: task, deleteErr: wantErr}
@@ -341,7 +410,7 @@ func TestCRI_DeleteContainer(t *testing.T) {
 }
 
 func TestCRI_StopAndDeleteTask(t *testing.T) {
-	t.Run("status error", func(t *testing.T) {
+	t.Run("status_error", func(t *testing.T) {
 		wantErr := errors.New("status failed")
 		cri := newTestCRI(nil)
 
@@ -349,7 +418,7 @@ func TestCRI_StopAndDeleteTask(t *testing.T) {
 		require.ErrorIs(t, err, wantErr)
 	})
 
-	t.Run("wait error", func(t *testing.T) {
+	t.Run("wait_error", func(t *testing.T) {
 		wantErr := errors.New("wait failed")
 		cri := newTestCRI(nil)
 
@@ -361,7 +430,7 @@ func TestCRI_StopAndDeleteTask(t *testing.T) {
 		require.ErrorIs(t, err, wantErr)
 	})
 
-	t.Run("kill error", func(t *testing.T) {
+	t.Run("kill_error", func(t *testing.T) {
 		wantErr := errors.New("kill failed")
 		cri := newTestCRI(nil)
 
@@ -374,7 +443,7 @@ func TestCRI_StopAndDeleteTask(t *testing.T) {
 		require.ErrorIs(t, err, wantErr)
 	})
 
-	t.Run("graceful stop uses stop signal and tolerates not found kill", func(t *testing.T) {
+	t.Run("graceful_stop_uses_stop_signal_and_tolerates_not_found_kill", func(t *testing.T) {
 		waitCh := make(chan runtimeExitStatus, 1)
 		waitCh <- fakeExitStatus{code: 0, at: time.Unix(10, 0)}
 		task := &fakeTask{
@@ -393,7 +462,7 @@ func TestCRI_StopAndDeleteTask(t *testing.T) {
 		require.True(t, task.deleted)
 	})
 
-	t.Run("graceful exit result error bubbles up", func(t *testing.T) {
+	t.Run("graceful_exit_result_error_bubbles_up", func(t *testing.T) {
 		wantErr := errors.New("result failed")
 		waitCh := make(chan runtimeExitStatus, 1)
 		waitCh <- fakeExitStatus{err: wantErr}
@@ -408,7 +477,7 @@ func TestCRI_StopAndDeleteTask(t *testing.T) {
 		require.ErrorIs(t, err, wantErr)
 	})
 
-	t.Run("timeout sends sigkill", func(t *testing.T) {
+	t.Run("timeout_sends_sigkill", func(t *testing.T) {
 		waitCh := make(chan runtimeExitStatus, 1)
 		task := &fakeTask{
 			id:               "t1",
@@ -430,7 +499,7 @@ func TestCRI_StopAndDeleteTask(t *testing.T) {
 		require.True(t, task.deleted)
 	})
 
-	t.Run("sigkill error", func(t *testing.T) {
+	t.Run("sigkill_error", func(t *testing.T) {
 		wantErr := errors.New("sigkill failed")
 		waitCh := make(chan runtimeExitStatus, 1)
 		task := &fakeTask{
@@ -446,7 +515,7 @@ func TestCRI_StopAndDeleteTask(t *testing.T) {
 		require.ErrorIs(t, err, wantErr)
 	})
 
-	t.Run("timeout exit result error bubbles up", func(t *testing.T) {
+	t.Run("timeout_exit_result_error_bubbles_up", func(t *testing.T) {
 		wantErr := errors.New("result failed")
 		waitCh := make(chan runtimeExitStatus, 1)
 		task := &fakeTask{
@@ -466,7 +535,7 @@ func TestCRI_StopAndDeleteTask(t *testing.T) {
 		require.ErrorIs(t, err, wantErr)
 	})
 
-	t.Run("task already deleted", func(t *testing.T) {
+	t.Run("task_already_deleted", func(t *testing.T) {
 		task := &fakeTask{id: "t1", status: runtimeTaskStopped, deleteErr: errdefs.ErrNotFound}
 		cri := newTestCRI(nil)
 
@@ -474,7 +543,7 @@ func TestCRI_StopAndDeleteTask(t *testing.T) {
 		require.NoError(t, err)
 	})
 
-	t.Run("task delete error", func(t *testing.T) {
+	t.Run("task_delete_error", func(t *testing.T) {
 		wantErr := errors.New("delete failed")
 		task := &fakeTask{id: "t1", status: runtimeTaskStopped, deleteErr: wantErr}
 		cri := newTestCRI(nil)
@@ -483,7 +552,7 @@ func TestCRI_StopAndDeleteTask(t *testing.T) {
 		require.ErrorIs(t, err, wantErr)
 	})
 
-	t.Run("delete exit result error is logged and ignored", func(t *testing.T) {
+	t.Run("delete_exit_result_error_is_logged_and_ignored", func(t *testing.T) {
 		task := &fakeTask{
 			id:               "t1",
 			status:           runtimeTaskStopped,

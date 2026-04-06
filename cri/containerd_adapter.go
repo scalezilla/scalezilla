@@ -115,8 +115,10 @@ func (c *containerdRuntimeContainer) Info(ctx context.Context) (runtimeContainer
 	}
 
 	return runtimeContainerInfo{
-		Image:   info.Image,
-		Runtime: info.Runtime.Name,
+		Image:     info.Image,
+		Runtime:   info.Runtime.Name,
+		Labels:    info.Labels,
+		CreatedAt: info.CreatedAt,
 	}, nil
 }
 
