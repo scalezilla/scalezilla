@@ -56,6 +56,7 @@ func NewCluster(config ClusterInitialConfig) (*Cluster, error) {
 	// Container Runtime
 	cri := cri.NewCRI(config.Logger)
 	c.di.createContainerFunc = cri.CreateContainer
+	c.di.listContainerFunc = cri.ListContainer
 
 	c.buildDataDir()
 	if config.Dev {

@@ -292,8 +292,11 @@ type dependencyInjections struct {
 	// aclTokenEncodeCommandFunc is used as a dependency injection
 	aclTokenEncodeCommandFunc func(cmd aclTokenCommand, w io.Writer) error
 
-	// CreateContainerFunc is used as a dependency injection
+	// createContainerFunc is used as a dependency injection
 	createContainerFunc func(ctx context.Context, spec cri.CreateContainerSpec) error
+
+	// listContainerFunc is used as a dependency injection
+	listContainerFunc func(ctx context.Context, namespace string) ([]cri.ContainerList, error)
 }
 
 // httpServer is an interface implements http.Server requirements.
