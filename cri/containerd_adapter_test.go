@@ -17,7 +17,7 @@ import (
 )
 
 func TestCRI_HelperFallbacks(t *testing.T) {
-	t.Run("client fallback uses containerd factory", func(t *testing.T) {
+	t.Run("client_fallback_uses_containerd_factory", func(t *testing.T) {
 		restore := swapContainerdClientFactory(func(string) (containerdClientAPI, error) {
 			return &fakeContainerdClientAPI{}, nil
 		})
@@ -29,7 +29,7 @@ func TestCRI_HelperFallbacks(t *testing.T) {
 		require.IsType(t, &containerdRuntimeClient{}, client)
 	})
 
-	t.Run("makeDir fallback uses os.MkdirAll", func(t *testing.T) {
+	t.Run("makeDir_fallback_uses_os_MkdirAll", func(t *testing.T) {
 		dir := filepath.Join(t.TempDir(), "a", "b")
 		cri := &CRI{}
 
@@ -40,7 +40,7 @@ func TestCRI_HelperFallbacks(t *testing.T) {
 		require.True(t, info.IsDir())
 	})
 
-	t.Run("afterSignal fallback uses time.After", func(t *testing.T) {
+	t.Run("afterSignal_fallback_uses_time_After", func(t *testing.T) {
 		cri := &CRI{}
 
 		select {
@@ -51,8 +51,8 @@ func TestCRI_HelperFallbacks(t *testing.T) {
 	})
 }
 
-func TestNewContainerdClient(t *testing.T) {
-	t.Run("factory error", func(t *testing.T) {
+func TestCRI_NewContainerdClient(t *testing.T) {
+	t.Run("factory_error", func(t *testing.T) {
 		wantErr := errors.New("factory failed")
 		restore := swapContainerdClientFactory(func(string) (containerdClientAPI, error) {
 			return nil, wantErr
@@ -79,12 +79,12 @@ func TestNewContainerdClient(t *testing.T) {
 	})
 }
 
-func TestContainerdRuntimeClient(t *testing.T) {
+func TestCRI_ContainerdRuntimeClient(t *testing.T) {
 	t.Run("marker", func(t *testing.T) {
 		containerdImage{}.isRuntimeImage()
 	})
 
-	t.Run("pull success", func(t *testing.T) {
+	t.Run("pull_success", func(t *testing.T) {
 		client := &containerdRuntimeClient{client: &fakeContainerdClientAPI{}}
 
 		image, err := client.Pull(context.Background(), "docker.io/library/redis:alpine")
@@ -93,7 +93,7 @@ func TestContainerdRuntimeClient(t *testing.T) {
 		image.(containerdImage).isRuntimeImage()
 	})
 
-	t.Run("pull error", func(t *testing.T) {
+	t.Run("pull_error", func(t *testing.T) {
 		wantErr := errors.New("pull failed")
 		client := &containerdRuntimeClient{client: &fakeContainerdClientAPI{pullErr: wantErr}}
 
@@ -102,7 +102,7 @@ func TestContainerdRuntimeClient(t *testing.T) {
 		require.ErrorIs(t, err, wantErr)
 	})
 
-	t.Run("new container wrong image type", func(t *testing.T) {
+	t.Run("new_container_wrong_image_type", func(t *testing.T) {
 		client := &containerdRuntimeClient{client: &fakeContainerdClientAPI{}}
 
 		container, err := client.NewContainer(context.Background(), "c1", fakeImage{}, nil, nil)
@@ -110,7 +110,7 @@ func TestContainerdRuntimeClient(t *testing.T) {
 		require.EqualError(t, err, "unexpected runtime image type cri.fakeImage")
 	})
 
-	t.Run("new container error", func(t *testing.T) {
+	t.Run("new_container_error", func(t *testing.T) {
 		wantErr := errors.New("new container failed")
 		client := &containerdRuntimeClient{client: &fakeContainerdClientAPI{newContainerErr: wantErr}}
 
@@ -119,7 +119,7 @@ func TestContainerdRuntimeClient(t *testing.T) {
 		require.ErrorIs(t, err, wantErr)
 	})
 
-	t.Run("new container success", func(t *testing.T) {
+	t.Run("new_container_success", func(t *testing.T) {
 		mockContainer := &mockCDContainer{id: "c1"}
 		fakeAPI := &fakeContainerdClientAPI{newContainer: mockContainer}
 		client := &containerdRuntimeClient{client: fakeAPI}
@@ -128,10 +128,10 @@ func TestContainerdRuntimeClient(t *testing.T) {
 		require.NoError(t, err)
 		require.IsType(t, &containerdRuntimeContainer{}, container)
 		require.Equal(t, "c1", fakeAPI.newContainerID)
-		require.Len(t, fakeAPI.newContainerOpts, 3)
+		require.Len(t, fakeAPI.newContainerOpts, 5)
 	})
 
-	t.Run("containers error", func(t *testing.T) {
+	t.Run("containers_error", func(t *testing.T) {
 		wantErr := errors.New("containers failed")
 		client := &containerdRuntimeClient{client: &fakeContainerdClientAPI{containersErr: wantErr}}
 
@@ -140,7 +140,7 @@ func TestContainerdRuntimeClient(t *testing.T) {
 		require.ErrorIs(t, err, wantErr)
 	})
 
-	t.Run("containers success", func(t *testing.T) {
+	t.Run("containers_success", func(t *testing.T) {
 		client := &containerdRuntimeClient{client: &fakeContainerdClientAPI{
 			containers: []containerd.Container{&mockCDContainer{id: "c1"}, &mockCDContainer{id: "c2"}},
 		}}
@@ -151,7 +151,7 @@ func TestContainerdRuntimeClient(t *testing.T) {
 		require.IsType(t, &containerdRuntimeContainer{}, containers[0])
 	})
 
-	t.Run("list tasks error", func(t *testing.T) {
+	t.Run("list_tasks_error", func(t *testing.T) {
 		wantErr := errors.New("list failed")
 		client := &containerdRuntimeClient{client: &fakeContainerdClientAPI{
 			taskService: &fakeContainerdTaskService{listErr: wantErr},
@@ -162,7 +162,7 @@ func TestContainerdRuntimeClient(t *testing.T) {
 		require.ErrorIs(t, err, wantErr)
 	})
 
-	t.Run("list tasks success", func(t *testing.T) {
+	t.Run("list_tasks_success", func(t *testing.T) {
 		client := &containerdRuntimeClient{client: &fakeContainerdClientAPI{
 			taskService: &fakeContainerdTaskService{
 				resp: &tasksapi.ListTasksResponse{
@@ -178,7 +178,7 @@ func TestContainerdRuntimeClient(t *testing.T) {
 		require.Equal(t, []runtimeTaskProcess{{ID: "c1", PID: 12, Status: "RUNNING"}}, tasks)
 	})
 
-	t.Run("load container error", func(t *testing.T) {
+	t.Run("load_container_error", func(t *testing.T) {
 		wantErr := errors.New("load failed")
 		client := &containerdRuntimeClient{client: &fakeContainerdClientAPI{loadContainerErr: wantErr}}
 
@@ -187,7 +187,7 @@ func TestContainerdRuntimeClient(t *testing.T) {
 		require.ErrorIs(t, err, wantErr)
 	})
 
-	t.Run("load container success", func(t *testing.T) {
+	t.Run("load_container_success", func(t *testing.T) {
 		mockContainer := &mockCDContainer{id: "c1"}
 		client := &containerdRuntimeClient{client: &fakeContainerdClientAPI{loadContainer: mockContainer}}
 
@@ -197,13 +197,13 @@ func TestContainerdRuntimeClient(t *testing.T) {
 	})
 }
 
-func TestContainerdRuntimeContainer(t *testing.T) {
+func TestCRI_ContainerdRuntimeContainer(t *testing.T) {
 	t.Run("id", func(t *testing.T) {
 		container := &containerdRuntimeContainer{container: &mockCDContainer{id: "c1"}}
 		require.Equal(t, "c1", container.ID())
 	})
 
-	t.Run("info error", func(t *testing.T) {
+	t.Run("info_error", func(t *testing.T) {
 		wantErr := errors.New("info failed")
 		container := &containerdRuntimeContainer{container: &mockCDContainer{infoErr: wantErr}}
 
@@ -212,7 +212,7 @@ func TestContainerdRuntimeContainer(t *testing.T) {
 		require.ErrorIs(t, err, wantErr)
 	})
 
-	t.Run("info success", func(t *testing.T) {
+	t.Run("info_success", func(t *testing.T) {
 		container := &containerdRuntimeContainer{container: &mockCDContainer{
 			info: containers.Container{
 				Image:   "redis:alpine",
@@ -225,7 +225,7 @@ func TestContainerdRuntimeContainer(t *testing.T) {
 		require.Equal(t, runtimeContainerInfo{Image: "redis:alpine", Runtime: "runc"}, info)
 	})
 
-	t.Run("new task error", func(t *testing.T) {
+	t.Run("new_task_error", func(t *testing.T) {
 		wantErr := errors.New("new task failed")
 		container := &containerdRuntimeContainer{container: &mockCDContainer{newTaskErr: wantErr}}
 
@@ -234,7 +234,7 @@ func TestContainerdRuntimeContainer(t *testing.T) {
 		require.ErrorIs(t, err, wantErr)
 	})
 
-	t.Run("new task success", func(t *testing.T) {
+	t.Run("new_task_success", func(t *testing.T) {
 		mockTask := &mockCDTask{id: "t1"}
 		container := &containerdRuntimeContainer{container: &mockCDContainer{newTask: mockTask}}
 
@@ -243,7 +243,7 @@ func TestContainerdRuntimeContainer(t *testing.T) {
 		require.IsType(t, &containerdRuntimeTask{}, task)
 	})
 
-	t.Run("task error", func(t *testing.T) {
+	t.Run("task_error", func(t *testing.T) {
 		wantErr := errors.New("task failed")
 		container := &containerdRuntimeContainer{container: &mockCDContainer{taskErr: wantErr}}
 
@@ -252,7 +252,7 @@ func TestContainerdRuntimeContainer(t *testing.T) {
 		require.ErrorIs(t, err, wantErr)
 	})
 
-	t.Run("task success", func(t *testing.T) {
+	t.Run("task_success", func(t *testing.T) {
 		mockTask := &mockCDTask{id: "t1"}
 		container := &containerdRuntimeContainer{container: &mockCDContainer{task: mockTask}}
 
@@ -270,7 +270,7 @@ func TestContainerdRuntimeContainer(t *testing.T) {
 		require.True(t, mockContainer.deleteCalled)
 	})
 
-	t.Run("stop signal", func(t *testing.T) {
+	t.Run("stop_signal", func(t *testing.T) {
 		mockContainer := &mockCDContainer{labels: map[string]string{containerd.StopSignalLabel: "SIGUSR1"}}
 		container := &containerdRuntimeContainer{container: mockContainer}
 
@@ -280,13 +280,13 @@ func TestContainerdRuntimeContainer(t *testing.T) {
 	})
 }
 
-func TestContainerdRuntimeTask(t *testing.T) {
+func TestCRI_ContainerdRuntimeTask(t *testing.T) {
 	t.Run("id", func(t *testing.T) {
 		task := &containerdRuntimeTask{task: &mockCDTask{id: "t1"}}
 		require.Equal(t, "t1", task.ID())
 	})
 
-	t.Run("wait error", func(t *testing.T) {
+	t.Run("wait_error", func(t *testing.T) {
 		wantErr := errors.New("wait failed")
 		task := &containerdRuntimeTask{task: &mockCDTask{waitErr: wantErr}}
 
@@ -295,7 +295,7 @@ func TestContainerdRuntimeTask(t *testing.T) {
 		require.ErrorIs(t, err, wantErr)
 	})
 
-	t.Run("wait closed channel yields zero exit status", func(t *testing.T) {
+	t.Run("wait_closed_channel_yields_zero_exit_status", func(t *testing.T) {
 		ch := make(chan containerd.ExitStatus)
 		close(ch)
 		task := &containerdRuntimeTask{task: &mockCDTask{waitCh: ch}}
@@ -309,7 +309,7 @@ func TestContainerdRuntimeTask(t *testing.T) {
 		require.True(t, exitedAt.IsZero())
 	})
 
-	t.Run("wait success", func(t *testing.T) {
+	t.Run("wait_success", func(t *testing.T) {
 		ch := make(chan containerd.ExitStatus, 1)
 		ch <- *containerd.NewExitStatus(7, time.Unix(30, 0), nil)
 		task := &containerdRuntimeTask{task: &mockCDTask{waitCh: ch}}
@@ -327,8 +327,8 @@ func TestContainerdRuntimeTask(t *testing.T) {
 		require.NoError(t, task.Start(context.Background()))
 	})
 
-	t.Run("status error", func(t *testing.T) {
-		wantErr := errors.New("status failed")
+	t.Run("status_error", func(t *testing.T) {
+		wantErr := errors.New("status_failed")
 		task := &containerdRuntimeTask{task: &mockCDTask{statusErr: wantErr}}
 
 		status, err := task.Status(context.Background())
@@ -336,7 +336,7 @@ func TestContainerdRuntimeTask(t *testing.T) {
 		require.ErrorIs(t, err, wantErr)
 	})
 
-	t.Run("status success", func(t *testing.T) {
+	t.Run("status_success", func(t *testing.T) {
 		task := &containerdRuntimeTask{task: &mockCDTask{status: containerd.Status{Status: containerd.Running}}}
 
 		status, err := task.Status(context.Background())
@@ -351,7 +351,7 @@ func TestContainerdRuntimeTask(t *testing.T) {
 		require.Equal(t, []syscall.Signal{syscall.SIGTERM}, mockTask.killed)
 	})
 
-	t.Run("delete error", func(t *testing.T) {
+	t.Run("delete_error", func(t *testing.T) {
 		wantErr := errors.New("delete failed")
 		task := &containerdRuntimeTask{task: &mockCDTask{deleteErr: wantErr}}
 
@@ -360,7 +360,7 @@ func TestContainerdRuntimeTask(t *testing.T) {
 		require.ErrorIs(t, err, wantErr)
 	})
 
-	t.Run("delete nil exit status", func(t *testing.T) {
+	t.Run("delete_nil_exit_status", func(t *testing.T) {
 		task := &containerdRuntimeTask{task: &mockCDTask{}}
 
 		exitStatus, err := task.Delete(context.Background())
@@ -371,7 +371,7 @@ func TestContainerdRuntimeTask(t *testing.T) {
 		require.True(t, exitedAt.IsZero())
 	})
 
-	t.Run("delete success", func(t *testing.T) {
+	t.Run("delete_success", func(t *testing.T) {
 		task := &containerdRuntimeTask{task: &mockCDTask{
 			deleteStatus: containerd.NewExitStatus(9, time.Unix(40, 0), nil),
 		}}
@@ -385,7 +385,7 @@ func TestContainerdRuntimeTask(t *testing.T) {
 	})
 }
 
-func TestContainerdRuntimeExitStatusResult(t *testing.T) {
+func TestCRI_ContainerdRuntimeExitStatusResult(t *testing.T) {
 	status := containerdRuntimeExitStatus{status: *containerd.NewExitStatus(11, time.Unix(50, 0), nil)}
 	code, exitedAt, err := status.Result()
 	require.NoError(t, err)
