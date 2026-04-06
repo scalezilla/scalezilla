@@ -172,3 +172,36 @@ func APICallsPodsList(config PodsListHTTPConfig) error {
 
 	return decodeError(body)
 }
+
+// APICallsPodsDelete is used by cli command to delete pods
+func APICallsPodsDelete(config PodsDeleteHTTPConfig) error {
+	path := "/api/v1/pods/delete"
+	url := fmt.Sprintf("%s%s", config.HTTPAddress, path)
+
+	b, _ := json.Marshal(APIPodsDeleteRequest{
+		Namespace: config.Namespace,
+		Pods:      config.Pods,
+		Detached:  config.Detached,
+	})
+
+	reqBody := bytes.NewBuffer(b)
+	req, _ := http.NewRequest("DELETE", url, reqBody)
+	req.Header.Add("Content-Length", strconv.Itoa(reqBody.Len()))
+	req.Header.Add("Content-Type", "application/json; charset=utf-8")
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		_ = resp.Body.Close()
+	}()
+	body, _ := io.ReadAll(resp.Body)
+
+	if resp.StatusCode == 200 {
+		fmt.Println(string(body))
+		return nil
+	}
+
+	return decodeError(body)
+}

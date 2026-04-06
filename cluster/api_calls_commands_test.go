@@ -313,4 +313,68 @@ func TestCluster_api_calls_command(t *testing.T) {
 		config.HTTPAddress = "htttp://127.0.0.1"
 		assert.Error(APICallsPodsList(config))
 	})
+
+	t.Run("pods_delete", func(t *testing.T) {
+		tests := []struct {
+			makeError, setError bool
+			statusCode          int
+			token               string
+			response            string
+			format              string
+			pods                []string
+			detached            bool
+		}{
+			{
+				statusCode: 200,
+				pods:       []string{"nginx-test-nginx-container"},
+				response:   `{"pods":["pod nginx-test-nginx-container successfully deleted"]}`,
+			},
+			{
+				statusCode: 200,
+				pods:       []string{"nginx-test-nginx-container"},
+				response:   `{"pods":["pod nginx-test-nginx-container successfully deleted"]}`,
+				format:     "json",
+			},
+			{
+				makeError:  true,
+				statusCode: 500,
+				response:   `{"error", "Internal Server Error"}`,
+			},
+		}
+
+		for _, tc := range tests {
+			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				w.WriteHeader(tc.statusCode)
+				if tc.makeError {
+					_, err := fmt.Fprintln(w, tc.response)
+					assert.Nil(err)
+					return
+				}
+				_, err := fmt.Fprintln(w, tc.response)
+				assert.Nil(err)
+			}))
+			defer server.Close()
+
+			namespace := "default"
+			config := PodsDeleteHTTPConfig{
+				Token:     tc.token,
+				Namespace: namespace,
+				Pods:      tc.pods,
+				Detached:  tc.detached,
+			}
+			config.HTTPAddress = server.URL
+			config.OutputFormat = tc.format
+
+			if tc.makeError {
+				assert.Error(APICallsPodsDelete(config))
+			} else {
+				assert.Nil(APICallsPodsDelete(config))
+			}
+		}
+
+		// provoke error
+		config := PodsDeleteHTTPConfig{}
+		config.HTTPAddress = "htttp://127.0.0.1"
+		assert.Error(APICallsPodsDelete(config))
+	})
 }

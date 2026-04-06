@@ -2,13 +2,16 @@ package cluster
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/scalezilla/scalezilla/cri"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestCluster_api_handler_pods(t *testing.T) {
@@ -127,8 +130,141 @@ func TestCluster_api_handler_pods(t *testing.T) {
 			case 404:
 			case 200:
 				assert.Equal(tc.expectedBody, w.Body.String(), fmt.Sprintf("Failed to perform http %s request", tc.method))
-
 			}
+		}
+	})
+
+	t.Run("delete", func(t *testing.T) {
+		tests := []struct {
+			method               string
+			uri                  string
+			expectedStatusCode   int
+			expectedBody         string
+			deleteContainerError bool
+			bootstrapped         bool
+			raftIsLeader         bool
+			raftyLeader          bool
+			pods                 []string
+			namespace            string
+			detached             bool
+		}{
+			{
+				method:             "DELETE",
+				uri:                "/api/v1/pods/delete",
+				expectedStatusCode: 200,
+				pods:               []string{"nginx-test-nginx-container"},
+				bootstrapped:       true,
+				raftyLeader:        true,
+			},
+			{
+				method:             "DELETE",
+				uri:                "/api/v1/pods/delete",
+				expectedStatusCode: 200,
+				pods:               []string{"nginx-test-nginx-container"},
+				bootstrapped:       true,
+				raftyLeader:        true,
+				namespace:          "default",
+			},
+			{
+				method:             "DELETE",
+				uri:                "/api/v1/pods/delete",
+				expectedStatusCode: 200,
+				pods:               []string{"nginx-test-nginx-container"},
+				bootstrapped:       true,
+				raftyLeader:        true,
+				namespace:          "default",
+				detached:           true,
+			},
+			{
+				method:               "DELETE",
+				uri:                  "/api/v1/pods/delete",
+				pods:                 []string{"nginx-test-nginx-container"},
+				expectedStatusCode:   200,
+				bootstrapped:         true,
+				raftyLeader:          true,
+				deleteContainerError: true,
+			},
+			{
+				method:               "DELETE",
+				uri:                  "/api/v1/pods/delete",
+				pods:                 []string{"nginx-test-nginx-container"},
+				expectedStatusCode:   200,
+				bootstrapped:         true,
+				raftyLeader:          true,
+				deleteContainerError: true,
+				detached:             true,
+			},
+			{
+				method:             "DELETE",
+				uri:                "/api/v1/pods/delete",
+				expectedStatusCode: 400,
+				bootstrapped:       true,
+				raftyLeader:        true,
+			},
+			{
+				method:             "DELETE",
+				uri:                "/api/v1/pods/delete",
+				pods:               []string{"nginx-test-nginx-container"},
+				expectedStatusCode: 403,
+				expectedBody:       `{"error":"cluster not boostrapped"}`,
+			},
+			{
+				method:             "DELETE",
+				uri:                "/api/v1/pods/delete",
+				pods:               []string{"nginx-test-nginx-container"},
+				expectedStatusCode: 403,
+				expectedBody:       `{"error":"no leader"}`,
+				bootstrapped:       true,
+			},
+		}
+
+		header := map[string]string{
+			"Content-Type": "application/json; charset=utf-8",
+		}
+
+		for _, tc := range tests {
+			cfg := basicClusterConfig{randomPort: false, dev: true}
+			cluster := makeBasicCluster(cfg)
+			defer func() {
+				_ = os.RemoveAll(cluster.config.DataDir)
+			}()
+
+			var payload string
+			if len(tc.pods) > 0 {
+				b, err := json.Marshal(APIPodsDeleteRequest{
+					Namespace: tc.namespace,
+					Pods:      tc.pods,
+					Detached:  tc.detached,
+				})
+				require.NoError(t, err)
+				payload = string(b)
+			}
+
+			mock := mockRafty{}
+			if tc.raftyLeader {
+				mock.isLeader = true
+			}
+			cluster.rafty = &mock
+
+			if tc.deleteContainerError {
+				cluster.di.deleteContainerFunc = func(ctx context.Context, namespace, containerID string, stopTimeout time.Duration) error {
+					return errors.New("container error")
+				}
+			} else {
+				cluster.di.deleteContainerFunc = func(ctx context.Context, namespace, containerID string, stopTimeout time.Duration) error {
+					return nil
+				}
+			}
+
+			router := cluster.newApiRouters()
+			w := makeHTTPRequestRecorder(router, tc.method, tc.uri, header, payload)
+
+			assert.Equal(tc.expectedStatusCode, w.Code, fmt.Sprintf("Failed to perform http %s request", tc.method))
+			// switch tc.expectedStatusCode {
+			// case 404:
+			// case 200:
+			// 	assert.Equal(tc.expectedBody, w.Body.String(), fmt.Sprintf("Failed to perform http %s request", tc.method))
+			// }
 		}
 	})
 }

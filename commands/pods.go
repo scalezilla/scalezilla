@@ -16,6 +16,7 @@ func Pods() *cli.Command {
 		Aliases: []string{"po"},
 		Commands: []*cli.Command{
 			podsList(),
+			podsDelete(),
 		},
 	}
 }
@@ -50,7 +51,7 @@ func podsList() *cli.Command {
 			&cli.StringFlag{
 				Name:        "namespace",
 				Aliases:     []string{"n"},
-				Usage:       "Kind node to list, server or client",
+				Usage:       "namespace in which pods stands",
 				Destination: &app.Namespace,
 			},
 			&cli.StringFlag{
@@ -71,6 +72,62 @@ func podsList() *cli.Command {
 			app.Context = sigCtx
 			app.Logger = logger.NewLogger()
 			return cluster.APICallsPodsList(app)
+		},
+	}
+}
+
+func podsDelete() *cli.Command {
+	var app cluster.PodsDeleteHTTPConfig
+
+	return &cli.Command{
+		Name:    "delete",
+		Usage:   "delete options",
+		Aliases: []string{"del"},
+		Flags: []cli.Flag{
+			&cli.StringFlag{
+				Name:        "address",
+				Aliases:     []string{"a"},
+				Value:       "http://127.0.0.1:15000",
+				Usage:       "HTTP(s) address to communicate with the cluster",
+				Destination: &app.HTTPAddress,
+				Sources: cli.NewValueSourceChain(
+					cli.EnvVar("SCALEZILLA_HTTP_ADDRESS"),
+				),
+			},
+			&cli.StringFlag{
+				Name:        "token",
+				Aliases:     []string{"t"},
+				Usage:       "Token to use to bootstrap the cluster",
+				Destination: &app.Token,
+				Sources: cli.NewValueSourceChain(
+					cli.EnvVar("SCALEZILLA_TOKEN"),
+				),
+			},
+			&cli.StringFlag{
+				Name:        "namespace",
+				Aliases:     []string{"n"},
+				Usage:       "namespace in which pods stands",
+				Destination: &app.Namespace,
+			},
+			&cli.BoolFlag{
+				Name:        "detached",
+				Aliases:     []string{"d"},
+				Usage:       "Kind node to list, server or client",
+				Destination: &app.Detached,
+			},
+		},
+		Action: func(ctx context.Context, c *cli.Command) error {
+			if c.NArg() == 0 {
+				return cluster.ErrPodsDeleteInvalid
+			}
+
+			app.Pods = c.Args().Slice()
+			sigCtx, stop := cluster.BuildSignal(ctx)
+			defer stop()
+
+			app.Context = sigCtx
+			app.Logger = logger.NewLogger()
+			return cluster.APICallsPodsDelete(app)
 		},
 	}
 }

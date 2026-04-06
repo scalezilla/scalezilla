@@ -72,3 +72,21 @@ type PodsListHTTPConfig struct {
 	// Default config
 	ClusterHTTPCallBaseConfig
 }
+
+// PodsListHTTPConfig is used by the cli to interact with the cluster nodes
+type PodsDeleteHTTPConfig struct {
+	// Token to use to interact with the cluster
+	Token string
+
+	// Namespace is used to fetch pods for specific or all namespaces
+	Namespace string
+
+	// Pods holds the list of pods to delete
+	Pods []string
+
+	// Detached allow us to delete pods instantly without waiting
+	Detached bool
+
+	// Default config
+	ClusterHTTPCallBaseConfig
+}
