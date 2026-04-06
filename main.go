@@ -24,6 +24,7 @@ func main() {
 			commands.Bootstrap(),
 			commands.Nodes(),
 			commands.Deployment(),
+			commands.Pods(),
 		},
 	}
 

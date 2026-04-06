@@ -41,3 +41,23 @@ func decodeError(body []byte) error {
 	}
 	return errors.New(resp.Error)
 }
+
+// printTableNodesList gives a table output
+func printTablePodsList(body []byte) {
+	var z []APIPodsListResponse
+	if err := json.Unmarshal(body, &z); err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	// tabwriter aligns columns using tabs
+	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+	_, _ = fmt.Fprintln(w, "NAME\tSTATUS\tAGE")
+
+	for _, n := range z {
+		_, _ = fmt.Fprintf(w, "%s\t%s\t%s\n",
+			n.ID, n.Status, n.CreatedAt,
+		)
+	}
+	_ = w.Flush()
+}

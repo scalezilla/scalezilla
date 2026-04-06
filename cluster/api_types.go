@@ -1,5 +1,7 @@
 package cluster
 
+import "time"
+
 // APIBootstrapStatusResponse return the response to the bootstrap
 // status command
 type APIBootstrapStatusResponse struct {
@@ -61,4 +63,34 @@ type APIDeploymentApplyRequest struct {
 // APIGenericResponse handle generic success response
 type APIGenericResponse struct {
 	Message string `json:"message"`
+}
+
+// APIPodsListRequest handle request to list pods
+type APIPodsListRequest struct {
+	// Namespace is the namespace to use to list pods
+	Namespace string `form:"namespace,default=default"`
+}
+
+// APIPodsListResponse handle response list pods
+type APIPodsListResponse struct {
+	// Namespace is the namespace to use to list pods
+	Namespace string `json:"namespace"`
+
+	// ID is the container id
+	ID string `json:"id"`
+
+	// Image is the container image
+	Image string `json:"image"`
+
+	// PID is the container pid
+	PID uint32 `json:"pid"`
+
+	// Runtime is the container runtime
+	Runtime string `json:"runtime"`
+
+	// Status is the container status
+	Status string `json:"status"`
+
+	// CreatedAt is the container creation date
+	CreatedAt time.Time `json:"created_at"`
 }

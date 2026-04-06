@@ -255,4 +255,62 @@ func TestCluster_api_calls_command(t *testing.T) {
 		config.HTTPAddress = "htttp://127.0.0.1"
 		assert.Error(APICallsDeploymentApply(config))
 	})
+
+	t.Run("pods_list", func(t *testing.T) {
+		tests := []struct {
+			makeError, setError bool
+			statusCode          int
+			token               string
+			response            string
+			format              string
+		}{
+			{
+				statusCode: 200,
+				response:   `[{"namespace":"default","id":"nginx-test-nginx-container","image":"docker.io/library/nginx:latest","pid":5086,"runtime":"io.containerd.runc.v2","status":"RUNNING","created_at":"0001-01-01T00:00:00Z"}]`,
+			},
+			{
+				statusCode: 200,
+				response:   `[{"namespace":"default","id":"nginx-test-nginx-container","image":"docker.io/library/nginx:latest","pid":5086,"runtime":"io.containerd.runc.v2","status":"RUNNING","created_at":"0001-01-01T00:00:00Z"}]`,
+				format:     "json",
+			},
+			{
+				makeError:  true,
+				statusCode: 500,
+				response:   `{"error", "Internal Server Error"}`,
+			},
+		}
+
+		for _, tc := range tests {
+			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				w.WriteHeader(tc.statusCode)
+				if tc.makeError {
+					_, err := fmt.Fprintln(w, tc.response)
+					assert.Nil(err)
+					return
+				}
+				_, err := fmt.Fprintln(w, tc.response)
+				assert.Nil(err)
+			}))
+			defer server.Close()
+
+			namespace := "default"
+			config := PodsListHTTPConfig{
+				Token:     tc.token,
+				Namespace: namespace,
+			}
+			config.HTTPAddress = server.URL
+			config.OutputFormat = tc.format
+
+			if tc.makeError {
+				assert.Error(APICallsPodsList(config))
+			} else {
+				assert.Nil(APICallsPodsList(config))
+			}
+		}
+
+		// provoke error
+		config := PodsListHTTPConfig{}
+		config.HTTPAddress = "htttp://127.0.0.1"
+		assert.Error(APICallsPodsList(config))
+	})
 }

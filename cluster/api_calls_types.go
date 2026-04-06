@@ -60,3 +60,15 @@ type DeploymentApplyHTTPConfig struct {
 	// osReadFile is a wrapper to osReadFile
 	osReadFile func(name string) ([]byte, error)
 }
+
+// PodsListHTTPConfig is used by the cli to interact with the cluster nodes
+type PodsListHTTPConfig struct {
+	// Token to use to interact with the cluster
+	Token string
+
+	// Namespace is used to fetch pods for specific or all namespaces
+	Namespace string
+
+	// Default config
+	ClusterHTTPCallBaseConfig
+}
