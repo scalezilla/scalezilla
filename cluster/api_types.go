@@ -94,3 +94,21 @@ type APIPodsListResponse struct {
 	// CreatedAt is the container creation date
 	CreatedAt time.Time `json:"created_at"`
 }
+
+// APIPodsDeleteRequest handle request to delete pods
+type APIPodsDeleteRequest struct {
+	// Namespace is the namespace to use to delete pods
+	Namespace string `json:"namespace" binding:"-"`
+
+	// Pods holds the list of pods to delete
+	Pods []string `json:"pods" binding:"required"`
+
+	// Detached allow us to delete pods instantly without waiting
+	Detached bool `json:"detached" binding:"-"`
+}
+
+// APIPodsDeleteResponse handle request to delete pods
+type APIPodsDeleteResponse struct {
+	// Pods holds the list of pods to delete
+	Pods []string `json:"pods"`
+}

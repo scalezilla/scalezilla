@@ -17,10 +17,11 @@ import (
 )
 
 const (
-	scalezillaAppName  string = "scalezilla"
-	defaultClusterName string = "default"
-	defaultDataDir     string = "/var/lib/scalezilla"
-	defaultNodePool    string = "default"
+	scalezillaAppName   string = "scalezilla"
+	defaultClusterName  string = "default"
+	defaultDataDir      string = "/var/lib/scalezilla"
+	defaultNodePool     string = "default"
+	defaultPodNamespace string = "default"
 )
 
 var (
@@ -35,6 +36,7 @@ var (
 	defaultClusterJoinRetryMax      uint16        = 5
 	defaultMaxAppendEntries         uint64        = 1024
 	defaultGrpcForceTimeout         time.Duration = 30 * time.Second
+	defaultDeletePodTimeout         time.Duration = 30 * time.Second
 )
 
 // ClusterInitialConfig is the configuration used by the cli
@@ -297,6 +299,9 @@ type dependencyInjections struct {
 
 	// listContainerFunc is used as a dependency injection
 	listContainerFunc func(ctx context.Context, namespace string) ([]cri.ContainerList, error)
+
+	// deleteContainerFunc is used as a dependency injection
+	deleteContainerFunc func(ctx context.Context, namespace, containerID string, stopTimeout time.Duration) error
 }
 
 // httpServer is an interface implements http.Server requirements.

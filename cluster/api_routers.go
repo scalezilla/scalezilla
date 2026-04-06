@@ -27,6 +27,7 @@ func (c *Cluster) newApiRouters() *gin.Engine {
 		v1.POST("/deployment/apply", c.deploymentApply)
 
 		v1.GET("/pods/list", c.podsList)
+		v1.DELETE("/pods/delete", c.podsDelete)
 	}
 	return router
 }

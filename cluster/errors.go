@@ -62,6 +62,8 @@ var (
 
 	// ErrContainerNameInvalid is triggered when container name is invalid
 	ErrContainerNameInvalid = errors.New("container name must match ^[A-Za-z][A-Za-z0-9-]{5,62}")
+
+	ErrPodsDeleteInvalid = errors.New("you must specify at least one container id")
 )
 
 // respError is used to decode errors

@@ -1,13 +1,15 @@
 package cluster
 
 import (
+	"fmt"
 	"net/http"
+	"sync"
 
 	"github.com/Lord-Y/rafty"
 	"github.com/gin-gonic/gin"
 )
 
-// deploymentApply is used to create deployment with user provided token
+// podsList is used to list pods with user provided informations
 func (cc *Cluster) podsList(c *gin.Context) {
 	var req APIPodsListRequest
 	_ = c.ShouldBind(&req)
@@ -36,6 +38,64 @@ func (cc *Cluster) podsList(c *gin.Context) {
 				CreatedAt: l.CreatedAt,
 			})
 		}
+		c.JSON(http.StatusOK, result)
+		return
+	}
+
+	c.JSON(http.StatusForbidden, gin.H{"error": rafty.ErrNotLeader.Error()})
+}
+
+// podsDelete is used to list pods with user provided informations
+func (cc *Cluster) podsDelete(c *gin.Context) {
+	var req APIPodsDeleteRequest
+	if err := c.BindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	if req.Namespace == "" {
+		req.Namespace = defaultPodNamespace
+	}
+
+	if cc.rafty.IsLeader() {
+		var result APIPodsDeleteResponse
+		if req.Detached {
+			for _, pod := range req.Pods {
+				result.Pods = append(result.Pods, fmt.Sprintf("pod %s deletion initiated in background", pod))
+			}
+			c.JSON(http.StatusOK, result)
+
+			var wg sync.WaitGroup
+			for _, pod := range req.Pods {
+				wg.Go(func() {
+					if err := cc.di.deleteContainerFunc(cc.ctx, req.Namespace, pod, defaultDeletePodTimeout); err != nil {
+						cc.logger.Error().Err(err).
+							Str("component", "pods").
+							Str("namespace", req.Namespace).
+							Str("pod", pod).
+							Msg("Fail to delete pod")
+					}
+				})
+			}
+			wg.Wait()
+			return
+		}
+
+		for _, pod := range req.Pods {
+			if err := cc.di.deleteContainerFunc(cc.ctx, req.Namespace, pod, defaultDeletePodTimeout); err != nil {
+				cc.logger.Error().Err(err).
+					Str("component", "pods").
+					Str("namespace", req.Namespace).
+					Str("pod", pod).
+					Msg("Fail to delete pod")
+
+				result.Pods = append(result.Pods, fmt.Sprintf("failed to delete pod %s with error %s", pod, err.Error()))
+			} else {
+				result.Pods = append(result.Pods, fmt.Sprintf("pod %s deleted successfully", pod))
+			}
+		}
+
+		// TODO: For later maybe if there is an error we should be return a different status code
 		c.JSON(http.StatusOK, result)
 		return
 	}
