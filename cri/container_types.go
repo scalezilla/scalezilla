@@ -76,6 +76,7 @@ type ContainerList struct {
 	Image     string
 	Runtime   string
 	Status    string
+	CreatedAt time.Time
 }
 
 // ContainerRuntime is an interface implements containers requirements
@@ -127,8 +128,10 @@ type runtimeTask interface {
 
 // runtimeContainerInfo holds the container fields CRI needs to render.
 type runtimeContainerInfo struct {
-	Image   string
-	Runtime string
+	Image     string
+	Runtime   string
+	Labels    map[string]string
+	CreatedAt time.Time
 }
 
 // runtimeTaskProcess is the reduced task view used by ListContainer.

@@ -76,6 +76,7 @@ func (c *CRI) CreateContainer(ctx context.Context, spec CreateContainerSpec) err
 
 	additionalContainerLabels := map[string]string{
 		"namespace": spec.Namespace,
+		"provider":  "scalezilla",
 	}
 
 	container, err := client.NewContainer(cctx, spec.ContainerID, image, spec.Labels, additionalContainerLabels)
@@ -174,31 +175,65 @@ func (c *CRI) ListContainer(ctx context.Context, namespace string) ([]ContainerL
 				Msg("Fail to get container info")
 		}
 
-		image := info.Image
-		if image == "" {
-			image = "-"
-		}
+		if len(info.Labels) > 0 {
+			if v, ok := info.Labels["provider"]; ok && v == "scalezilla" {
+				if namespace == "all" {
+					image := info.Image
+					if image == "" {
+						image = "-"
+					}
 
-		runtimeName := info.Runtime
-		if runtimeName == "" {
-			runtimeName = "-"
-		}
+					runtimeName := info.Runtime
+					if runtimeName == "" {
+						runtimeName = "-"
+					}
 
-		pid := uint32(0)
-		status := "-"
-		if task, ok := taskByID[cc.ID()]; ok {
-			pid = task.PID
-			status = task.Status
-		}
+					pid := uint32(0)
+					status := "-"
+					if task, ok := taskByID[cc.ID()]; ok {
+						pid = task.PID
+						status = task.Status
+					}
 
-		list = append(list, ContainerList{
-			Namespace: namespace,
-			ID:        cc.ID(),
-			PID:       pid,
-			Image:     image,
-			Runtime:   runtimeName,
-			Status:    status,
-		})
+					if n, ok := info.Labels["namespace"]; ok {
+						list = append(list, ContainerList{
+							Namespace: n,
+							ID:        cc.ID(),
+							PID:       pid,
+							Image:     image,
+							Runtime:   runtimeName,
+							Status:    status,
+						})
+					}
+				} else if n, ok := info.Labels["namespace"]; ok && n == namespace {
+					image := info.Image
+					if image == "" {
+						image = "-"
+					}
+
+					runtimeName := info.Runtime
+					if runtimeName == "" {
+						runtimeName = "-"
+					}
+
+					pid := uint32(0)
+					status := "-"
+					if task, ok := taskByID[cc.ID()]; ok {
+						pid = task.PID
+						status = task.Status
+					}
+
+					list = append(list, ContainerList{
+						Namespace: namespace,
+						ID:        cc.ID(),
+						PID:       pid,
+						Image:     image,
+						Runtime:   runtimeName,
+						Status:    status,
+					})
+				}
+			}
+		}
 	}
 
 	return list, nil
