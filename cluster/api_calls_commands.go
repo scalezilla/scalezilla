@@ -65,11 +65,13 @@ func APICallsNodesList(config NodesListHTTPConfig) error {
 	path := "/api/v1/cluster/nodes/list"
 	url := fmt.Sprintf("%s%s", config.HTTPAddress, path)
 
-	b, _ := json.Marshal(APINodesListRequest{Kind: config.Kind})
-	reqBody := bytes.NewBuffer(b)
-	req, _ := http.NewRequest("GET", url, reqBody)
-	req.Header.Add("Content-Length", strconv.Itoa(reqBody.Len()))
+	req, _ := http.NewRequest("GET", url, nil)
 	req.Header.Add("Content-Type", "application/json; charset=utf-8")
+	req.Header.Add("X-Scalezilla-Token", config.Token)
+
+	q := req.URL.Query()
+	q.Add("kind", config.Kind)
+	req.URL.RawQuery = q.Encode()
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
@@ -120,6 +122,7 @@ func APICallsDeploymentApply(config DeploymentApplyHTTPConfig) error {
 	req, _ := http.NewRequest("POST", url, reqBody)
 	req.Header.Add("Content-Length", strconv.Itoa(reqBody.Len()))
 	req.Header.Add("Content-Type", "application/json; charset=utf-8")
+	req.Header.Add("X-Scalezilla-Token", config.Token)
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
@@ -146,11 +149,13 @@ func APICallsPodsList(config PodsListHTTPConfig) error {
 	path := "/api/v1/pods/list"
 	url := fmt.Sprintf("%s%s", config.HTTPAddress, path)
 
-	b, _ := json.Marshal(APIPodsListRequest{Namespace: config.Namespace})
-	reqBody := bytes.NewBuffer(b)
-	req, _ := http.NewRequest("GET", url, reqBody)
-	req.Header.Add("Content-Length", strconv.Itoa(reqBody.Len()))
+	req, _ := http.NewRequest("GET", url, nil)
 	req.Header.Add("Content-Type", "application/json; charset=utf-8")
+	req.Header.Add("X-Scalezilla-Token", config.Token)
+
+	q := req.URL.Query()
+	q.Add("namespace", config.Namespace)
+	req.URL.RawQuery = q.Encode()
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
@@ -188,6 +193,7 @@ func APICallsPodsDelete(config PodsDeleteHTTPConfig) error {
 	req, _ := http.NewRequest("DELETE", url, reqBody)
 	req.Header.Add("Content-Length", strconv.Itoa(reqBody.Len()))
 	req.Header.Add("Content-Type", "application/json; charset=utf-8")
+	req.Header.Add("X-Scalezilla-Token", config.Token)
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
