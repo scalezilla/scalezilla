@@ -33,3 +33,10 @@ wget -P /tmp -q https://github.com/containernetworking/plugins/releases/download
 tar Cxzvf /opt/cni/bin /tmp/cni-plugins-linux-${ARCH}-v${CNI_VERSION}.tgz
 rm -f /tmp/cni-plugins-linux-${ARCH}-v${CNI_VERSION}.tgz
 
+# fill .profile
+grep -q 'cd /home/vagrant/scalezilla' /home/vagrant/.profile || cat >> /home/vagrant/.profile <<EOF
+cd /home/vagrant/scalezilla
+EOF
+grep -q 'cd /home/vagrant/scalezilla' /root/.profile || cat >> /root/.profile <<EOF
+cd /home/vagrant/scalezilla
+EOF
