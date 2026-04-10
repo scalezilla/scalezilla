@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"io"
 	"sync"
+	"time"
 
 	"github.com/Lord-Y/rafty"
 )
@@ -18,6 +19,9 @@ type memoryStore struct {
 
 	// aclToken map holds a map of decoded acl Token store
 	aclToken map[string]dataACLToken
+
+	// deployment map holds a map of the decoded deployments
+	deployment map[string]deploymentState
 }
 
 // data holds informations about the decoded command and its log index.
@@ -73,6 +77,18 @@ const (
 
 	// dummyTest is only used during unit testing
 	dummyTest
+
+	// deploymentCommandGet command allows us to fetch data from deployment fsm store
+	deploymentCommandGet
+
+	// deploymentCommandGetAll command allows us to fetch all data from deployment fsm store
+	deploymentCommandGetAll
+
+	// deploymentCommandSet command allows us to write data from deployment fsm store
+	deploymentCommandSet
+
+	// deploymentCommandDelete command allows us to delete data from deployment fsm store
+	deploymentCommandDelete
 )
 
 // aclTokenCommand is the struct to use to interact with cluster data
@@ -85,4 +101,51 @@ type aclTokenCommand struct {
 	Token string
 
 	InitialToken bool
+}
+
+// deploymentContent holds requirements related to deployments
+type deploymentContent struct {
+	//
+	// IsStable tell if the deployment has successfully deployed
+	IsStable bool `json:"is_stable"`
+
+	// RawContent holds deployment content
+	RawContent string `json:"raw_content"`
+
+	// Version is the deployment version
+	Version uint64 `json:"version"`
+
+	// CreatedAt is the creation date
+	CreatedAt time.Time `json:"created_at"`
+
+	// ReplicaSetID is the name of the id of the replicaset
+	ReplicaSetID string `json:"replicaset_id"`
+}
+
+// deploymentState is the state related to a deployment
+type deploymentState struct {
+	// Kind represent the set of commands: get, set, del
+	Kind commandKind `json:"kind"`
+
+	// index is the index of the log entry.
+	// must not be used during encoding/decoding
+	index uint64
+
+	// Name is the deployment name
+	Name string `json:"name"`
+
+	// NewRollingVersion is used when a new version is ongoing.
+	// set to -1 when no new version
+	NewRollingVersion int64 `json:"new_rolling_version"`
+
+	// CurrentUsedVersion is used to know which version to use
+	// when is started after beeing shutdown
+	CurrentUsedVersion uint64 `json:"current_used_version"`
+
+	// Content holds deployment requirements
+	Content map[uint64]deploymentContent `json:"content"`
+
+	// MustBeStarted is a flag who by default is set to true.
+	// When set to false, all pods will be stopped
+	MustBeStarted bool `json:"must_be_started"`
 }

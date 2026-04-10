@@ -16,8 +16,9 @@ func newFSM(logStore rafty.LogStore) *fsmState {
 	fsm := &fsmState{
 		logStore: logStore,
 		memoryStore: memoryStore{
-			logs:     make(map[uint64]*rafty.LogEntry),
-			aclToken: make(map[string]dataACLToken),
+			logs:       make(map[uint64]*rafty.LogEntry),
+			aclToken:   make(map[string]dataACLToken),
+			deployment: make(map[string]deploymentState),
 		},
 	}
 
