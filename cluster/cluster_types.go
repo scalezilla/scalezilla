@@ -294,6 +294,9 @@ type dependencyInjections struct {
 	// aclTokenEncodeCommandFunc is used as a dependency injection
 	aclTokenEncodeCommandFunc func(cmd aclTokenCommand, w io.Writer) error
 
+	// deploymentEncodeCommandFunc is used as a dependency injection
+	deploymentEncodeCommandFunc func(cmd deploymentState, w io.Writer) error
+
 	// createContainerFunc is used as a dependency injection
 	createContainerFunc func(ctx context.Context, spec cri.CreateContainerSpec) error
 

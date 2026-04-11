@@ -52,6 +52,7 @@ func NewCluster(config ClusterInitialConfig) (*Cluster, error) {
 	c.raftMetricPrefix = scalezillaAppName
 	c.di.aclTokenEncodeCommandFunc = aclTokenEncodeCommand
 	c.di.sendRPCFunc = c.sendRPC
+	c.di.deploymentEncodeCommandFunc = deploymentEncodeCommand
 
 	// Container Runtime
 	cri := cri.NewCRI(config.Logger)
