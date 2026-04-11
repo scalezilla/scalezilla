@@ -60,7 +60,7 @@ func (m *memoryStore) aclTokenDelete(key []byte) {
 	}
 }
 
-// usersGetAll will fetch all users from the users store.
+// aclTokenGetAll will fetch all token from the token store.
 // An error will be returned if the any
 func (m *memoryStore) aclTokenGetAll() (z []*AclToken, err error) {
 	m.mu.RLock()
@@ -80,8 +80,7 @@ func (m *memoryStore) aclTokenGetAll() (z []*AclToken, err error) {
 }
 
 // aclTokenEncoded will fetch all token from the aclToken store.
-// tokens will be binary encoded when command is forwarded
-// to the leader.
+// tokens will be binary encoded when command is forwarded to the leader.
 // An error will be returned if the any
 func (m *memoryStore) aclTokenEncoded(cmd aclTokenCommand) (u []byte, err error) {
 	m.mu.RLock()
@@ -96,35 +95,12 @@ func (m *memoryStore) aclTokenEncoded(cmd aclTokenCommand) (u []byte, err error)
 		if err != nil {
 			return nil, err
 		}
-		// TODO: I need to get why I was doing the following
-		// because in the for loop below I wasn't
-		// token, err := aclTokenUnmarshal(value)
-		// if err != nil {
-		// 	return nil, err
-		// }
-		// fmt.Printf("TOKEN %+v", token)
-
-		// return json.Marshal(AclToken{
-		// 	Firstname: cmd.Key,
-		// 	Lastname:  string(value),
-		// })
 
 		return value, nil
 	}
 
-	// var tokens []AclToken
 	for _, v := range m.aclToken {
-		// data := AclToken{
-		// 	Firstname: string(k),
-		// 	Lastname:  string(v.value),
-		// }
-		// token, err := aclTokenUnMarshal(v.value)
-		// if err != nil {
-		// 	return nil, err
-		// }
-		// tokens = append(tokens, token)
 		u = append(u, m.logs[v.index].Command...)
 	}
-	// return json.Marshal(tokens)
 	return
 }

@@ -37,7 +37,7 @@ func TestCluster_fsm_acl_token(t *testing.T) {
 		}
 
 		assert.Nil(cluster.fsm.memoryStore.aclTokenSet(entry, cmd))
-		assert.Nil(cluster.fsm.memoryStore.aclTokenSet(entry, cmd)) // for delete
+		assert.Nil(cluster.fsm.memoryStore.aclTokenSet(entry, cmd)) // for delete, keep it
 	})
 
 	t.Run("acl_token_get", func(t *testing.T) {
