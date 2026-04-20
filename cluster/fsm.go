@@ -27,6 +27,10 @@ func newFSM(logStore rafty.LogStore) *fsmState {
 	fsm.raftyUnmarshalBinaryWithChecksumFunc = rafty.UnmarshalBinaryWithChecksum
 	fsm.applyCommandFunc = fsm.ApplyCommand
 	fsm.memoryStoreLogsApplyCommandFunc = fsm.memoryStore.logsApplyCommand
+	fsm.memoryDeploymentSetFunc = fsm.memoryStore.deploymentSet
+	fsm.memoryDeploymentExistsFunc = fsm.memoryStore.deploymentExist
+	fsm.memoryDeploymentGetFunc = fsm.memoryStore.deploymentGet
+	fsm.memoryDeploymentGetAllFunc = fsm.memoryStore.deploymentGetAll
 
 	return fsm
 }
@@ -104,6 +108,9 @@ func (f *fsmState) ApplyCommand(log *rafty.LogEntry) ([]byte, error) {
 	switch kind {
 	case aclTokenCommandGet, aclTokenCommandSet, aclTokenCommandDelete:
 		return f.aclTokenApplyCommand(log)
+
+	case deploymentCommandGet, deploymentCommandGetAll, deploymentCommandSet, deploymentCommandDelete:
+		return f.deploymentApplyCommand(log)
 
 	default:
 		return nil, nil

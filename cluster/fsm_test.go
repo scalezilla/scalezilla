@@ -178,7 +178,7 @@ func TestCluster_fsm_x(t *testing.T) {
 		assert.Error(err)
 	})
 
-	t.Run("apply_command_kind", func(t *testing.T) {
+	t.Run("apply_command_kind_acl_token", func(t *testing.T) {
 		cfg := basicClusterConfig{randomPort: false, dev: true}
 		cluster := makeBasicCluster(cfg)
 		store, err := cluster.buildStore()
@@ -195,6 +195,33 @@ func TestCluster_fsm_x(t *testing.T) {
 		}
 		buffer := new(bytes.Buffer)
 		assert.Nil(aclTokenEncodeCommand(cmd, buffer))
+
+		entry := &rafty.LogEntry{
+			Term:    1,
+			LogType: uint32(rafty.LogReplication),
+			Command: buffer.Bytes(),
+		}
+
+		_, err = fsm.ApplyCommand(entry)
+		assert.ErrorIs(err, rafty.ErrKeyNotFound)
+	})
+
+	t.Run("apply_command_kind_deployment", func(t *testing.T) {
+		cfg := basicClusterConfig{randomPort: false, dev: true}
+		cluster := makeBasicCluster(cfg)
+		store, err := cluster.buildStore()
+		defer func() {
+			_ = os.RemoveAll(cluster.config.DataDir)
+		}()
+		assert.Nil(err)
+
+		fsm := newFSM(store)
+		cmd := deploymentState{
+			Kind: deploymentCommandGet,
+			Name: "a",
+		}
+		buffer := new(bytes.Buffer)
+		assert.Nil(deploymentEncodeCommand(cmd, buffer))
 
 		entry := &rafty.LogEntry{
 			Term:    1,
