@@ -30,7 +30,11 @@ func (cc *Cluster) deploymentApply(c *gin.Context) {
 			return
 		}
 
-		var replicaSetID string
+		var (
+			replicaSetID string
+			state        deploymentState
+			version      uint64
+		)
 		if cc.fsm.memoryDeploymentExistsFunc([]byte(spec.Deployment.Namespace), []byte(spec.Deployment.Name)) {
 			data, err := cc.fsm.memoryDeploymentGetFunc([]byte(spec.Deployment.Namespace), []byte(spec.Deployment.Name))
 			if err != nil && err != rafty.ErrKeyNotFound {
@@ -43,7 +47,7 @@ func (cc *Cluster) deploymentApply(c *gin.Context) {
 				return
 			}
 
-			state, err := deploymentDecodeCommand(data)
+			state, err = deploymentDecodeCommand(data)
 			if err != nil {
 				cc.logger.Error().Err(err).
 					Str("component", "deployment").
@@ -58,7 +62,7 @@ func (cc *Cluster) deploymentApply(c *gin.Context) {
 				return
 			} else {
 				keys := slices.Sorted(maps.Keys(state.Content))
-				version := keys[0] + 1
+				version = keys[0] + 1
 				replicaSetID = string(strings.ToLower(rand.Text())[:10])
 				dc := deploymentContent{
 					RawContent:   req.HCLContent,
@@ -74,7 +78,7 @@ func (cc *Cluster) deploymentApply(c *gin.Context) {
 				}
 				state.Content = make(map[uint64]deploymentContent)
 				state.Content[version] = dc
-				if err := cc.submitCommandDeploymentWrite(10*time.Second, state); err != nil {
+				if err := cc.di.submitCommandDeploymentWriteFunc(10*time.Second, state); err != nil {
 					cc.logger.Error().Err(err).
 						Str("component", "deployment").
 						Str("namespace", spec.Deployment.Namespace).
@@ -86,23 +90,24 @@ func (cc *Cluster) deploymentApply(c *gin.Context) {
 			}
 		} else {
 			replicaSetID = string(strings.ToLower(rand.Text())[:10])
+			version = 1
 			dc := deploymentContent{
 				RawContent:   req.HCLContent,
-				Version:      1,
+				Version:      version,
 				CreatedAt:    time.Now(),
 				ReplicaSetID: replicaSetID,
 			}
 			content := make(map[uint64]deploymentContent, 1)
 			content[dc.Version] = dc
-			state := deploymentState{
+			state = deploymentState{
 				Kind:               deploymentCommandSet,
 				Name:               spec.Deployment.Name,
-				NewRollingVersion:  1,
-				CurrentUsedVersion: 1,
+				NewRollingVersion:  int64(version),
+				CurrentUsedVersion: version,
 				Content:            content,
 				MustBeStarted:      true,
 			}
-			if err := cc.submitCommandDeploymentWrite(10*time.Second, state); err != nil {
+			if err := cc.di.submitCommandDeploymentWriteFunc(10*time.Second, state); err != nil {
 				cc.logger.Error().Err(err).
 					Str("component", "deployment").
 					Str("namespace", spec.Deployment.Namespace).
@@ -126,11 +131,30 @@ func (cc *Cluster) deploymentApply(c *gin.Context) {
 		}
 
 		if err := cc.di.createContainerFunc(cc.ctx, cspec); err != nil {
+			cc.logger.Error().Err(err).
+				Str("component", "deployment").
+				Str("namespace", spec.Deployment.Namespace).
+				Str("deploymentName", spec.Deployment.Name).
+				Msgf("fail to create container")
 			c.JSON(http.StatusBadRequest, gin.H{"error": err})
 			return
 		}
 
 		c.JSON(http.StatusOK, APIGenericResponse{Message: "deployment successful"})
+		fmt.Println("version", version)
+		// make version stable
+		state.NewRollingVersion = -1
+		if entry, ok := state.Content[version]; ok {
+			entry.IsStable = true
+			state.Content[version] = entry
+			if err := cc.di.stableSubmitCommandDeploymentWriteFunc(10*time.Second, state); err != nil {
+				cc.logger.Error().Err(err).
+					Str("component", "deployment").
+					Str("namespace", spec.Deployment.Namespace).
+					Str("deploymentName", spec.Deployment.Name).
+					Msgf("fail to set deployment as stable")
+			}
+		}
 		return
 	}
 

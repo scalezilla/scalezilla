@@ -305,6 +305,12 @@ type dependencyInjections struct {
 
 	// deleteContainerFunc is used as a dependency injection
 	deleteContainerFunc func(ctx context.Context, namespace, containerID string, stopTimeout time.Duration) error
+
+	// submitCommandDeploymentWriteFunc is used as a dependency injection
+	submitCommandDeploymentWriteFunc func(timeout time.Duration, cmd deploymentState) error
+
+	// stableSubmitCommandDeploymentWriteFunc is used as a dependency injection
+	stableSubmitCommandDeploymentWriteFunc func(timeout time.Duration, cmd deploymentState) error
 }
 
 // httpServer is an interface implements http.Server requirements.

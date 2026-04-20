@@ -60,6 +60,11 @@ func NewCluster(config ClusterInitialConfig) (*Cluster, error) {
 	c.di.listContainerFunc = cri.ListContainer
 	c.di.deleteContainerFunc = cri.DeleteContainer
 
+	// deployment
+	c.di.submitCommandDeploymentWriteFunc = c.submitCommandDeploymentWrite
+	// must be kept, it's not an error
+	c.di.stableSubmitCommandDeploymentWriteFunc = c.submitCommandDeploymentWrite
+
 	c.buildDataDir()
 	if config.Dev {
 		c.buildDevConfig(config)

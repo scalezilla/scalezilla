@@ -7,7 +7,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -33,6 +32,7 @@ func TestCluster_api_handler_deployment(t *testing.T) {
 			createContainerError                           bool
 			raftIsLeader, existsError                      bool
 			decodeError, submitCommandDeploymentWriteError bool
+			stableSubmitCommandDeploymentWriteError        bool
 		}{
 			{
 				method:             "POST",
@@ -84,6 +84,15 @@ func TestCluster_api_handler_deployment(t *testing.T) {
 				newFile:            "basic_redis_success.hcl",
 				expectedStatusCode: 200,
 				raftIsLeader:       true,
+			},
+			{
+				method:                                  "POST",
+				uri:                                     "/api/v1/deployment/apply",
+				file:                                    "basic_success.hcl",
+				newFile:                                 "basic_redis_success.hcl",
+				expectedStatusCode:                      200,
+				raftIsLeader:                            true,
+				stableSubmitCommandDeploymentWriteError: true,
 			},
 		}
 
@@ -137,7 +146,13 @@ func TestCluster_api_handler_deployment(t *testing.T) {
 			}
 
 			if tc.submitCommandDeploymentWriteError {
-				cluster.di.deploymentEncodeCommandFunc = func(cmd deploymentState, w io.Writer) error {
+				cluster.di.submitCommandDeploymentWriteFunc = func(timeout time.Duration, cmd deploymentState) error {
+					return errors.New("submit error")
+				}
+			}
+
+			if tc.stableSubmitCommandDeploymentWriteError {
+				cluster.di.stableSubmitCommandDeploymentWriteFunc = func(timeout time.Duration, cmd deploymentState) error {
 					return errors.New("submit error")
 				}
 			}
@@ -626,7 +641,7 @@ func TestCluster_api_handler_deployment(t *testing.T) {
 				return buffer.Bytes(), nil
 			}
 
-			cluster.di.deploymentEncodeCommandFunc = func(cmd deploymentState, w io.Writer) error {
+			cluster.di.submitCommandDeploymentWriteFunc = func(timeout time.Duration, cmd deploymentState) error {
 				return errors.New("submit error")
 			}
 
