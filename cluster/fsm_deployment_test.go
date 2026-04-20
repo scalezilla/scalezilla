@@ -24,8 +24,9 @@ func TestCluster_fsm_deployment(t *testing.T) {
 		cluster.fsm = newFSM(store)
 
 		cmd := deploymentState{
-			Kind: deploymentCommandGet,
-			Name: "redis",
+			Kind:      deploymentCommandGet,
+			Namespace: "default",
+			Name:      "redis",
 		}
 		buffer := new(bytes.Buffer)
 		err = deploymentEncodeCommand(cmd, buffer)
@@ -47,6 +48,7 @@ func TestCluster_fsm_deployment(t *testing.T) {
 		}
 		cmd2 := deploymentState{
 			Kind:               deploymentCommandSet,
+			Namespace:          "default",
 			Name:               "redis",
 			NewRollingVersion:  -1,
 			CurrentUsedVersion: 1,
@@ -67,6 +69,7 @@ func TestCluster_fsm_deployment(t *testing.T) {
 		assert.Nil(err)
 		cluster.fsm = newFSM(store)
 
+		namespace := "default"
 		name := "redis"
 		content := make(map[uint64]deploymentContent)
 		key := uint64(0)
@@ -79,6 +82,7 @@ func TestCluster_fsm_deployment(t *testing.T) {
 		}
 		cmd := deploymentState{
 			Kind:               deploymentCommandSet,
+			Namespace:          namespace,
 			Name:               name,
 			NewRollingVersion:  -1,
 			CurrentUsedVersion: 1,
@@ -94,11 +98,11 @@ func TestCluster_fsm_deployment(t *testing.T) {
 			Command: buffer.Bytes(),
 		}
 
-		r, err := cluster.fsm.memoryStore.deploymentGet([]byte(name))
+		r, err := cluster.fsm.memoryStore.deploymentGet([]byte(namespace), []byte(name))
 		assert.Nil(r)
 		assert.ErrorIs(err, rafty.ErrKeyNotFound)
 		assert.Nil(cluster.fsm.memoryStore.deploymentSet(entry, cmd))
-		r, err = cluster.fsm.memoryStore.deploymentGet([]byte(name))
+		r, err = cluster.fsm.memoryStore.deploymentGet([]byte(namespace), []byte(name))
 		assert.NotNil(r)
 		assert.Nil(err)
 	})
@@ -113,6 +117,7 @@ func TestCluster_fsm_deployment(t *testing.T) {
 		assert.Nil(err)
 		cluster.fsm = newFSM(store)
 
+		namespace := "default"
 		name := "redis"
 		content := make(map[uint64]deploymentContent)
 		key := uint64(0)
@@ -125,6 +130,7 @@ func TestCluster_fsm_deployment(t *testing.T) {
 		}
 		cmd := deploymentState{
 			Kind:               deploymentCommandSet,
+			Namespace:          namespace,
 			Name:               name,
 			NewRollingVersion:  -1,
 			CurrentUsedVersion: 1,
@@ -140,9 +146,9 @@ func TestCluster_fsm_deployment(t *testing.T) {
 			Command: buffer.Bytes(),
 		}
 
-		assert.Equal(false, cluster.fsm.memoryStore.deploymentExist([]byte(name)))
+		assert.Equal(false, cluster.fsm.memoryStore.deploymentExist([]byte(namespace), []byte(name)))
 		assert.Nil(cluster.fsm.memoryStore.deploymentSet(entry, cmd))
-		assert.Equal(true, cluster.fsm.memoryStore.deploymentExist([]byte(name)))
+		assert.Equal(true, cluster.fsm.memoryStore.deploymentExist([]byte(namespace), []byte(name)))
 	})
 
 	t.Run("delete", func(t *testing.T) {
@@ -155,6 +161,7 @@ func TestCluster_fsm_deployment(t *testing.T) {
 		assert.Nil(err)
 		cluster.fsm = newFSM(store)
 
+		namespace := "default"
 		name := "redis"
 		content := make(map[uint64]deploymentContent)
 		key := uint64(0)
@@ -167,6 +174,7 @@ func TestCluster_fsm_deployment(t *testing.T) {
 		}
 		cmd := deploymentState{
 			Kind:               deploymentCommandSet,
+			Namespace:          namespace,
 			Name:               name,
 			NewRollingVersion:  -1,
 			CurrentUsedVersion: 1,
@@ -182,9 +190,9 @@ func TestCluster_fsm_deployment(t *testing.T) {
 			Command: buffer.Bytes(),
 		}
 
-		cluster.fsm.memoryStore.deploymentDelete([]byte(name))
+		cluster.fsm.memoryStore.deploymentDelete([]byte(namespace), []byte(name))
 		assert.Nil(cluster.fsm.memoryStore.deploymentSet(entry, cmd))
-		cluster.fsm.memoryStore.deploymentDelete([]byte(name))
+		cluster.fsm.memoryStore.deploymentDelete([]byte(namespace), []byte(name))
 	})
 
 	t.Run("get_all", func(t *testing.T) {
@@ -197,6 +205,7 @@ func TestCluster_fsm_deployment(t *testing.T) {
 		assert.Nil(err)
 		cluster.fsm = newFSM(store)
 
+		namespace := "default"
 		name := "redis"
 		content := make(map[uint64]deploymentContent)
 		key := uint64(0)
@@ -209,6 +218,7 @@ func TestCluster_fsm_deployment(t *testing.T) {
 		}
 		cmd := deploymentState{
 			Kind:               deploymentCommandSet,
+			Namespace:          namespace,
 			Name:               name,
 			NewRollingVersion:  -1,
 			CurrentUsedVersion: 1,
@@ -243,6 +253,7 @@ func TestCluster_fsm_deployment(t *testing.T) {
 		assert.Nil(err)
 		cluster.fsm = newFSM(store)
 
+		namespace := "default"
 		name := "redis"
 		content := make(map[uint64]deploymentContent)
 		key := uint64(0)
@@ -255,6 +266,7 @@ func TestCluster_fsm_deployment(t *testing.T) {
 		}
 		set := deploymentState{
 			Kind:               deploymentCommandSet,
+			Namespace:          namespace,
 			Name:               name,
 			NewRollingVersion:  -1,
 			CurrentUsedVersion: 1,
@@ -262,12 +274,14 @@ func TestCluster_fsm_deployment(t *testing.T) {
 		}
 
 		get := deploymentState{
-			Kind: deploymentCommandGet,
-			Name: name,
+			Kind:      deploymentCommandGet,
+			Namespace: namespace,
+			Name:      name,
 		}
 		fakeGet := deploymentState{
-			Kind: deploymentCommandGet,
-			Name: name + "aa",
+			Kind:      deploymentCommandGet,
+			Namespace: namespace,
+			Name:      name + "aa",
 		}
 		getAll := deploymentState{
 			Kind: deploymentCommandGetAll,

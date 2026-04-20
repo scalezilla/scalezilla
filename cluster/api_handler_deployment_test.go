@@ -219,11 +219,11 @@ func TestCluster_api_handler_deployment(t *testing.T) {
 			}
 
 			router := cluster.newApiRouters()
-			cluster.fsm.memoryDeploymentExistsFunc = func(key []byte) bool {
+			cluster.fsm.memoryDeploymentExistsFunc = func(namespace, deploymentName []byte) bool {
 				return true
 			}
 
-			cluster.fsm.memoryDeploymentGetFunc = func(key []byte) ([]byte, error) {
+			cluster.fsm.memoryDeploymentGetFunc = func(namespace, deploymentName []byte) ([]byte, error) {
 				return nil, errors.New("get deployment error")
 			}
 
@@ -297,11 +297,11 @@ func TestCluster_api_handler_deployment(t *testing.T) {
 				}
 			}
 
-			cluster.fsm.memoryDeploymentExistsFunc = func(key []byte) bool {
+			cluster.fsm.memoryDeploymentExistsFunc = func(namespace, deploymentName []byte) bool {
 				return true
 			}
 
-			cluster.fsm.memoryDeploymentGetFunc = func(key []byte) ([]byte, error) {
+			cluster.fsm.memoryDeploymentGetFunc = func(namespace, deploymentName []byte) ([]byte, error) {
 				return []byte(`{a`), nil
 			}
 
@@ -376,11 +376,11 @@ func TestCluster_api_handler_deployment(t *testing.T) {
 				}
 			}
 
-			cluster.fsm.memoryDeploymentExistsFunc = func(key []byte) bool {
+			cluster.fsm.memoryDeploymentExistsFunc = func(namespace, deploymentName []byte) bool {
 				return true
 			}
 
-			cluster.fsm.memoryDeploymentGetFunc = func(key []byte) ([]byte, error) {
+			cluster.fsm.memoryDeploymentGetFunc = func(namespace, deploymentName []byte) ([]byte, error) {
 				spec, err := cluster.parseDeployment(dataFile)
 				assert.NoError(err)
 				replicaSetID := string(strings.ToLower(rand.Text())[:10])
@@ -479,11 +479,11 @@ func TestCluster_api_handler_deployment(t *testing.T) {
 				}
 			}
 
-			cluster.fsm.memoryDeploymentExistsFunc = func(key []byte) bool {
+			cluster.fsm.memoryDeploymentExistsFunc = func(namespace, deploymentName []byte) bool {
 				return true
 			}
 
-			cluster.fsm.memoryDeploymentGetFunc = func(key []byte) ([]byte, error) {
+			cluster.fsm.memoryDeploymentGetFunc = func(namespace, deploymentName []byte) ([]byte, error) {
 				spec, err := cluster.parseDeployment(dataFile)
 				assert.NoError(err)
 				replicaSetID := string(strings.ToLower(rand.Text())[:10])
@@ -594,11 +594,11 @@ func TestCluster_api_handler_deployment(t *testing.T) {
 				}
 			}
 
-			cluster.fsm.memoryDeploymentExistsFunc = func(key []byte) bool {
+			cluster.fsm.memoryDeploymentExistsFunc = func(namespace, deploymentName []byte) bool {
 				return true
 			}
 
-			cluster.fsm.memoryDeploymentGetFunc = func(key []byte) ([]byte, error) {
+			cluster.fsm.memoryDeploymentGetFunc = func(namespace, deploymentName []byte) ([]byte, error) {
 				spec, err := cluster.parseDeployment(dataFile)
 				assert.NoError(err)
 				replicaSetID := string(strings.ToLower(rand.Text())[:10])

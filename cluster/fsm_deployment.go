@@ -1,6 +1,8 @@
 package cluster
 
 import (
+	"fmt"
+
 	"github.com/Lord-Y/rafty"
 )
 
@@ -14,35 +16,38 @@ func (m *memoryStore) deploymentSet(log *rafty.LogEntry, config deploymentState)
 	// That will allows us to cleanly perform snapshots
 	// when required by removed overriden keys and reduce
 	// disk space and amount of time to restore data
-	if _, ok := m.deployment[config.Name]; ok {
-		delete(m.logs, m.deployment[config.Name].index)
+	name := fmt.Sprintf("%s-%s", config.Namespace, config.Name)
+	if _, ok := m.deployment[name]; ok {
+		delete(m.logs, m.deployment[name].index)
 	}
 
 	m.logs[log.Index] = log
 	config.index = log.Index
-	m.deployment[config.Name] = config
+	m.deployment[name] = config
 	return nil
 }
 
 // deploymentGet will fetch provided key from the deployment store.
 // An error will be returned if the key is not found
-func (m *memoryStore) deploymentGet(key []byte) ([]byte, error) {
+func (m *memoryStore) deploymentGet(namespace, deploymentName []byte) ([]byte, error) {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
 
-	keyName := string(key)
-	if _, ok := m.deployment[keyName]; ok {
-		return m.logs[m.deployment[keyName].index].Command, nil
+	ns := string(namespace)
+	dname := string(deploymentName)
+	name := fmt.Sprintf("%s-%s", ns, dname)
+	if _, ok := m.deployment[name]; ok {
+		return m.logs[m.deployment[name].index].Command, nil
 	}
 	return nil, rafty.ErrKeyNotFound
 }
 
 // deploymentExist will return true if the deployment exist
-func (m *memoryStore) deploymentExist(key []byte) bool {
+func (m *memoryStore) deploymentExist(namespace, deploymentName []byte) bool {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
 
-	if _, ok := m.deployment[string(key)]; ok {
+	if _, ok := m.deployment[fmt.Sprintf("%s-%s", string(namespace), string(deploymentName))]; ok {
 		return true
 	}
 	return false
@@ -50,14 +55,16 @@ func (m *memoryStore) deploymentExist(key []byte) bool {
 
 // deploymentDelete will delete provided key from the deployment store.
 // An error will be returned if the key is not found
-func (m *memoryStore) deploymentDelete(key []byte) {
+func (m *memoryStore) deploymentDelete(namespace, deploymentName []byte) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
-	data := string(key)
+	ns := string(namespace)
+	dname := string(deploymentName)
+	data := fmt.Sprintf("%s-%s", ns, dname)
 	if _, ok := m.deployment[data]; ok {
 		delete(m.logs, m.deployment[data].index)
-		delete(m.deployment, string(key))
+		delete(m.deployment, data)
 	}
 }
 
@@ -89,7 +96,7 @@ func (m *memoryStore) deploymentEncoded(cmd deploymentState) (u []byte, err erro
 	}
 
 	if cmd.Kind == deploymentCommandGet {
-		value, err := m.deploymentGet([]byte(cmd.Name))
+		value, err := m.deploymentGet([]byte(cmd.Namespace), []byte(cmd.Name))
 		if err != nil {
 			return nil, err
 		}

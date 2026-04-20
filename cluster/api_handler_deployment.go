@@ -31,8 +31,8 @@ func (cc *Cluster) deploymentApply(c *gin.Context) {
 		}
 
 		var replicaSetID string
-		if cc.fsm.memoryDeploymentExistsFunc([]byte(spec.Deployment.Name)) {
-			data, err := cc.fsm.memoryDeploymentGetFunc([]byte(spec.Deployment.Name))
+		if cc.fsm.memoryDeploymentExistsFunc([]byte(spec.Deployment.Namespace), []byte(spec.Deployment.Name)) {
+			data, err := cc.fsm.memoryDeploymentGetFunc([]byte(spec.Deployment.Namespace), []byte(spec.Deployment.Name))
 			if err != nil && err != rafty.ErrKeyNotFound {
 				cc.logger.Error().Err(err).
 					Str("component", "deployment").

@@ -61,10 +61,10 @@ type fsmState struct {
 	memoryDeploymentSetFunc func(log *rafty.LogEntry, config deploymentState) error
 
 	// memoryDeploymentSetFunc is used as a dependency injection
-	memoryDeploymentGetFunc func(key []byte) ([]byte, error)
+	memoryDeploymentGetFunc func(namespace, deploymentName []byte) ([]byte, error)
 
 	// memoryDeploymentExistsFunc is used as a dependency injection
-	memoryDeploymentExistsFunc func(key []byte) bool
+	memoryDeploymentExistsFunc func(namespace, deploymentName []byte) bool
 
 	// memoryDeploymentGetAllFunc is used as a dependency injection
 	memoryDeploymentGetAllFunc func() (z []*deploymentState, err error)
@@ -142,6 +142,9 @@ type deploymentState struct {
 	// index is the index of the log entry.
 	// must not be used during encoding/decoding
 	index uint64
+
+	// Namespace in which the deployment is for
+	Namespace string `json:"namespace"`
 
 	// Name is the deployment name
 	Name string `json:"name"`

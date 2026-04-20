@@ -17,6 +17,12 @@ func deploymentEncodeCommand(cmd deploymentState, w io.Writer) error {
 	if err := binary.Write(w, binary.LittleEndian, uint32(cmd.Kind)); err != nil {
 		return err
 	}
+	if err := binary.Write(w, binary.LittleEndian, uint64(len(cmd.Namespace))); err != nil {
+		return err
+	}
+	if _, err := w.Write([]byte(cmd.Namespace)); err != nil {
+		return err
+	}
 	if err := binary.Write(w, binary.LittleEndian, uint64(len(cmd.Name))); err != nil {
 		return err
 	}
@@ -79,6 +85,16 @@ func deploymentDecodeCommand(data []byte) (deploymentState, error) {
 		return cmd, err
 	}
 	cmd.Kind = commandKind(kind)
+
+	var namespaceLen uint64
+	if err := binary.Read(buffer, binary.LittleEndian, &namespaceLen); err != nil {
+		return cmd, err
+	}
+	namespace := make([]byte, namespaceLen)
+	if _, err := io.ReadFull(buffer, namespace); err != nil {
+		return cmd, err
+	}
+	cmd.Namespace = string(namespace)
 
 	var nameLen uint64
 	if err := binary.Read(buffer, binary.LittleEndian, &nameLen); err != nil {
@@ -179,14 +195,14 @@ func (f *fsmState) deploymentApplyCommand(log *rafty.LogEntry) ([]byte, error) {
 		return nil, f.memoryStore.deploymentSet(log, cmd)
 
 	case deploymentCommandGet:
-		value, err := f.memoryStore.deploymentGet([]byte(cmd.Name))
+		value, err := f.memoryStore.deploymentGet([]byte(cmd.Namespace), []byte(cmd.Name))
 		if err != nil {
 			return nil, err
 		}
 		return value, nil
 
 	case deploymentCommandDelete:
-		f.memoryStore.deploymentDelete([]byte(cmd.Name))
+		f.memoryStore.deploymentDelete([]byte(cmd.Namespace), []byte(cmd.Name))
 	}
 
 	return nil, nil

@@ -29,6 +29,7 @@ func TestCluster_fsm_deployment_utils(t *testing.T) {
 		}
 		cmd := deploymentState{
 			Kind:               deploymentCommandSet,
+			Namespace:          "default",
 			Name:               "redis",
 			NewRollingVersion:  -1,
 			CurrentUsedVersion: 1,
@@ -36,64 +37,68 @@ func TestCluster_fsm_deployment_utils(t *testing.T) {
 		}
 		assert.Error(deploymentEncodeCommand(cmd, w))
 
-		// write binary name
+		// write binary namespace
 		w = &failWriter{failOn: 2}
 		assert.Error(deploymentEncodeCommand(cmd, w))
 
-		// write cmd name
+		// write cmd namespace
 		w = &failWriter{failOn: 3}
 		assert.Error(deploymentEncodeCommand(cmd, w))
 
-		// write newRollingVersion
+		// write binary name
 		w = &failWriter{failOn: 4}
 		assert.Error(deploymentEncodeCommand(cmd, w))
 
-		// write currentUsedVersion
+		// write cmd name
 		w = &failWriter{failOn: 5}
 		assert.Error(deploymentEncodeCommand(cmd, w))
 
-		// write binary count
-		w = &failWriter{failOn: 5}
-		assert.Error(deploymentEncodeCommand(cmd, w))
-
-		// write key
+		// write newRollingVersion
 		w = &failWriter{failOn: 6}
 		assert.Error(deploymentEncodeCommand(cmd, w))
 
-		// write isStable
+		// write currentUsedVersion
 		w = &failWriter{failOn: 7}
 		assert.Error(deploymentEncodeCommand(cmd, w))
 
-		// write isStable
+		// write binary count
 		w = &failWriter{failOn: 8}
 		assert.Error(deploymentEncodeCommand(cmd, w))
 
-		// write rawContent
+		// write key
 		w = &failWriter{failOn: 9}
 		assert.Error(deploymentEncodeCommand(cmd, w))
 
-		// write rawContent
+		// write isStable
 		w = &failWriter{failOn: 10}
 		assert.Error(deploymentEncodeCommand(cmd, w))
 
-		// write version
+		// write rawContent
 		w = &failWriter{failOn: 11}
 		assert.Error(deploymentEncodeCommand(cmd, w))
 
-		// write createdAt
+		// write rawContent
 		w = &failWriter{failOn: 12}
 		assert.Error(deploymentEncodeCommand(cmd, w))
 
-		// write replicaSetID
+		// write version
 		w = &failWriter{failOn: 13}
 		assert.Error(deploymentEncodeCommand(cmd, w))
 
-		// write replicaSetID
+		// write createdAt
 		w = &failWriter{failOn: 14}
 		assert.Error(deploymentEncodeCommand(cmd, w))
 
-		// write mustBeStarted
+		// write replicaSetID
 		w = &failWriter{failOn: 15}
+		assert.Error(deploymentEncodeCommand(cmd, w))
+
+		// write replicaSetID
+		w = &failWriter{failOn: 16}
+		assert.Error(deploymentEncodeCommand(cmd, w))
+
+		// write mustBeStarted
+		w = &failWriter{failOn: 17}
 		assert.Error(deploymentEncodeCommand(cmd, w))
 
 		// No errors expected here
@@ -113,6 +118,7 @@ func TestCluster_fsm_deployment_utils(t *testing.T) {
 		}
 		cmd := deploymentState{
 			Kind:               deploymentCommandSet,
+			Namespace:          "default",
 			Name:               "redis",
 			NewRollingVersion:  -1,
 			CurrentUsedVersion: 1,
@@ -123,85 +129,116 @@ func TestCluster_fsm_deployment_utils(t *testing.T) {
 		_, err := deploymentDecodeCommand([]byte{})
 		assert.Error(err)
 
-		// error name length
+		// error namespace length
 		buf := new(bytes.Buffer)
 		_ = binary.Write(buf, binary.LittleEndian, uint32(cmd.Kind)) // kind
 		_, err = deploymentDecodeCommand(buf.Bytes())
 		assert.Error(err)
 
+		// error namespace
+		buf.Reset()
+		_ = binary.Write(buf, binary.LittleEndian, uint32(cmd.Kind))           // kind
+		_ = binary.Write(buf, binary.LittleEndian, uint64(len(cmd.Namespace))) // namespace len
+		_, err = deploymentDecodeCommand(buf.Bytes())
+		assert.Error(err)
+
+		// error name length
+		buf = new(bytes.Buffer)
+		_ = binary.Write(buf, binary.LittleEndian, uint32(cmd.Kind))           // kind
+		_ = binary.Write(buf, binary.LittleEndian, uint64(len(cmd.Namespace))) // namespace len
+		_, _ = buf.Write([]byte(cmd.Namespace))                                // namespace
+		_, err = deploymentDecodeCommand(buf.Bytes())
+		assert.Error(err)
+
 		// error name
 		buf.Reset()
-		_ = binary.Write(buf, binary.LittleEndian, uint32(cmd.Kind))      // kind
-		_ = binary.Write(buf, binary.LittleEndian, uint64(len(cmd.Name))) // name len
+		_ = binary.Write(buf, binary.LittleEndian, uint32(cmd.Kind))           // kind
+		_ = binary.Write(buf, binary.LittleEndian, uint64(len(cmd.Namespace))) // namespace len
+		_, _ = buf.Write([]byte(cmd.Namespace))                                // namespace
+		_ = binary.Write(buf, binary.LittleEndian, uint64(len(cmd.Name)))      // name len
 		_, err = deploymentDecodeCommand(buf.Bytes())
 		assert.Error(err)
 
 		// error newRollingVersion
 		buf.Reset()
-		_ = binary.Write(buf, binary.LittleEndian, uint32(cmd.Kind))      // kind
-		_ = binary.Write(buf, binary.LittleEndian, uint64(len(cmd.Name))) // name len
-		_, _ = buf.Write([]byte(cmd.Name))                                // name
+		_ = binary.Write(buf, binary.LittleEndian, uint32(cmd.Kind))           // kind
+		_ = binary.Write(buf, binary.LittleEndian, uint64(len(cmd.Namespace))) // namespace len
+		_, _ = buf.Write([]byte(cmd.Namespace))                                // namespace
+		_ = binary.Write(buf, binary.LittleEndian, uint64(len(cmd.Name)))      // name len
+		_, _ = buf.Write([]byte(cmd.Name))                                     // name
 		_, err = deploymentDecodeCommand(buf.Bytes())
 		assert.Error(err)
 
 		// error currentUsedVersion
 		buf.Reset()
-		_ = binary.Write(buf, binary.LittleEndian, uint32(cmd.Kind))      // kind
-		_ = binary.Write(buf, binary.LittleEndian, uint64(len(cmd.Name))) // name len
-		_, _ = buf.Write([]byte(cmd.Name))                                // name
-		_ = binary.Write(buf, binary.LittleEndian, cmd.NewRollingVersion) // newRollingVersion
+		_ = binary.Write(buf, binary.LittleEndian, uint32(cmd.Kind))           // kind
+		_ = binary.Write(buf, binary.LittleEndian, uint64(len(cmd.Namespace))) // namespace len
+		_, _ = buf.Write([]byte(cmd.Namespace))                                // namespace
+		_ = binary.Write(buf, binary.LittleEndian, uint64(len(cmd.Name)))      // name len
+		_, _ = buf.Write([]byte(cmd.Name))                                     // name
+		_ = binary.Write(buf, binary.LittleEndian, cmd.NewRollingVersion)      // newRollingVersion
 		_, err = deploymentDecodeCommand(buf.Bytes())
 		assert.Error(err)
 
 		// error count
 		buf.Reset()
-		_ = binary.Write(buf, binary.LittleEndian, uint32(cmd.Kind))       // kind
-		_ = binary.Write(buf, binary.LittleEndian, uint64(len(cmd.Name)))  // name len
-		_, _ = buf.Write([]byte(cmd.Name))                                 // name
-		_ = binary.Write(buf, binary.LittleEndian, cmd.NewRollingVersion)  // newRollingVersion
-		_ = binary.Write(buf, binary.LittleEndian, cmd.CurrentUsedVersion) // currentUsedVersion
+		_ = binary.Write(buf, binary.LittleEndian, uint32(cmd.Kind))           // kind
+		_ = binary.Write(buf, binary.LittleEndian, uint64(len(cmd.Namespace))) // namespace len
+		_, _ = buf.Write([]byte(cmd.Namespace))                                // namespace
+		_ = binary.Write(buf, binary.LittleEndian, uint64(len(cmd.Name)))      // name len
+		_, _ = buf.Write([]byte(cmd.Name))                                     // name
+		_ = binary.Write(buf, binary.LittleEndian, cmd.NewRollingVersion)      // newRollingVersion
+		_ = binary.Write(buf, binary.LittleEndian, cmd.CurrentUsedVersion)     // currentUsedVersion
 		_, err = deploymentDecodeCommand(buf.Bytes())
 		assert.Error(err)
 
 		// error key
 		buf.Reset()
-		_ = binary.Write(buf, binary.LittleEndian, uint32(cmd.Kind))         // kind
-		_ = binary.Write(buf, binary.LittleEndian, uint64(len(cmd.Name)))    // name len
-		_, _ = buf.Write([]byte(cmd.Name))                                   // name
-		_ = binary.Write(buf, binary.LittleEndian, cmd.NewRollingVersion)    // newRollingVersion
-		_ = binary.Write(buf, binary.LittleEndian, cmd.CurrentUsedVersion)   // currentUsedVersion
-		_ = binary.Write(buf, binary.LittleEndian, uint64(len(cmd.Content))) // count
+		_ = binary.Write(buf, binary.LittleEndian, uint32(cmd.Kind))           // kind
+		_ = binary.Write(buf, binary.LittleEndian, uint64(len(cmd.Namespace))) // namespace len
+		_, _ = buf.Write([]byte(cmd.Namespace))                                // namespace
+		_ = binary.Write(buf, binary.LittleEndian, uint64(len(cmd.Name)))      // name len
+		_, _ = buf.Write([]byte(cmd.Name))                                     // name
+		_ = binary.Write(buf, binary.LittleEndian, cmd.NewRollingVersion)      // newRollingVersion
+		_ = binary.Write(buf, binary.LittleEndian, cmd.CurrentUsedVersion)     // currentUsedVersion
+		_ = binary.Write(buf, binary.LittleEndian, uint64(len(cmd.Content)))   // count
 		_, err = deploymentDecodeCommand(buf.Bytes())
 		assert.Error(err)
 
 		// error isStable
 		buf.Reset()
-		_ = binary.Write(buf, binary.LittleEndian, uint32(cmd.Kind))         // kind
-		_ = binary.Write(buf, binary.LittleEndian, uint64(len(cmd.Name)))    // name len
-		_, _ = buf.Write([]byte(cmd.Name))                                   // name
-		_ = binary.Write(buf, binary.LittleEndian, cmd.NewRollingVersion)    // newRollingVersion
-		_ = binary.Write(buf, binary.LittleEndian, cmd.CurrentUsedVersion)   // currentUsedVersion
-		_ = binary.Write(buf, binary.LittleEndian, uint64(len(cmd.Content))) // count
-		_ = binary.Write(buf, binary.LittleEndian, key)                      // key
+		_ = binary.Write(buf, binary.LittleEndian, uint32(cmd.Kind))           // kind
+		_ = binary.Write(buf, binary.LittleEndian, uint64(len(cmd.Namespace))) // namespace len
+		_, _ = buf.Write([]byte(cmd.Namespace))                                // namespace
+		_ = binary.Write(buf, binary.LittleEndian, uint64(len(cmd.Name)))      // name len
+		_, _ = buf.Write([]byte(cmd.Name))                                     // name
+		_ = binary.Write(buf, binary.LittleEndian, cmd.NewRollingVersion)      // newRollingVersion
+		_ = binary.Write(buf, binary.LittleEndian, cmd.CurrentUsedVersion)     // currentUsedVersion
+		_ = binary.Write(buf, binary.LittleEndian, uint64(len(cmd.Content)))   // count
+		_ = binary.Write(buf, binary.LittleEndian, key)                        // key
 		_, err = deploymentDecodeCommand(buf.Bytes())
 		assert.Error(err)
 
 		// error rawContentLen
 		buf.Reset()
-		_ = binary.Write(buf, binary.LittleEndian, uint32(cmd.Kind))         // kind
-		_ = binary.Write(buf, binary.LittleEndian, uint64(len(cmd.Name)))    // name len
-		_, _ = buf.Write([]byte(cmd.Name))                                   // name
-		_ = binary.Write(buf, binary.LittleEndian, cmd.NewRollingVersion)    // newRollingVersion
-		_ = binary.Write(buf, binary.LittleEndian, cmd.CurrentUsedVersion)   // currentUsedVersion
-		_ = binary.Write(buf, binary.LittleEndian, uint64(len(cmd.Content))) // count
-		_ = binary.Write(buf, binary.LittleEndian, key)                      // key
-		_ = binary.Write(buf, binary.LittleEndian, uint64(1))                // isStable
+		_ = binary.Write(buf, binary.LittleEndian, uint32(cmd.Kind))           // kind
+		_ = binary.Write(buf, binary.LittleEndian, uint64(len(cmd.Namespace))) // namespace len
+		_, _ = buf.Write([]byte(cmd.Namespace))                                // namespace
+		_ = binary.Write(buf, binary.LittleEndian, uint64(len(cmd.Name)))      // name len
+		_, _ = buf.Write([]byte(cmd.Name))                                     // name
+		_ = binary.Write(buf, binary.LittleEndian, cmd.NewRollingVersion)      // newRollingVersion
+		_ = binary.Write(buf, binary.LittleEndian, cmd.CurrentUsedVersion)     // currentUsedVersion
+		_ = binary.Write(buf, binary.LittleEndian, uint64(len(cmd.Content)))   // count
+		_ = binary.Write(buf, binary.LittleEndian, key)                        // key
+		_ = binary.Write(buf, binary.LittleEndian, uint64(1))                  // isStable
 		_, err = deploymentDecodeCommand(buf.Bytes())
 		assert.Error(err)
 
 		// error rawContent
 		buf.Reset()
 		_ = binary.Write(buf, binary.LittleEndian, uint32(cmd.Kind))                                 // kind
+		_ = binary.Write(buf, binary.LittleEndian, uint64(len(cmd.Namespace)))                       // namespace len
+		_, _ = buf.Write([]byte(cmd.Namespace))                                                      // namespace
 		_ = binary.Write(buf, binary.LittleEndian, uint64(len(cmd.Name)))                            // name len
 		_, _ = buf.Write([]byte(cmd.Name))                                                           // name
 		_ = binary.Write(buf, binary.LittleEndian, cmd.NewRollingVersion)                            // newRollingVersion
@@ -216,6 +253,8 @@ func TestCluster_fsm_deployment_utils(t *testing.T) {
 		// error version
 		buf.Reset()
 		_ = binary.Write(buf, binary.LittleEndian, uint32(cmd.Kind))                                 // kind
+		_ = binary.Write(buf, binary.LittleEndian, uint64(len(cmd.Namespace)))                       // namespace len
+		_, _ = buf.Write([]byte(cmd.Namespace))                                                      // namespace
 		_ = binary.Write(buf, binary.LittleEndian, uint64(len(cmd.Name)))                            // name len
 		_, _ = buf.Write([]byte(cmd.Name))                                                           // name
 		_ = binary.Write(buf, binary.LittleEndian, cmd.NewRollingVersion)                            // newRollingVersion
@@ -231,6 +270,8 @@ func TestCluster_fsm_deployment_utils(t *testing.T) {
 		// error createdAt
 		buf.Reset()
 		_ = binary.Write(buf, binary.LittleEndian, uint32(cmd.Kind))                                 // kind
+		_ = binary.Write(buf, binary.LittleEndian, uint64(len(cmd.Namespace)))                       // namespace len
+		_, _ = buf.Write([]byte(cmd.Namespace))                                                      // namespace
 		_ = binary.Write(buf, binary.LittleEndian, uint64(len(cmd.Name)))                            // name len
 		_, _ = buf.Write([]byte(cmd.Name))                                                           // name
 		_ = binary.Write(buf, binary.LittleEndian, cmd.NewRollingVersion)                            // newRollingVersion
@@ -247,6 +288,8 @@ func TestCluster_fsm_deployment_utils(t *testing.T) {
 		// error replicaSetIDLen
 		buf.Reset()
 		_ = binary.Write(buf, binary.LittleEndian, uint32(cmd.Kind))                                 // kind
+		_ = binary.Write(buf, binary.LittleEndian, uint64(len(cmd.Namespace)))                       // namespace len
+		_, _ = buf.Write([]byte(cmd.Namespace))                                                      // namespace
 		_ = binary.Write(buf, binary.LittleEndian, uint64(len(cmd.Name)))                            // name len
 		_, _ = buf.Write([]byte(cmd.Name))                                                           // name
 		_ = binary.Write(buf, binary.LittleEndian, cmd.NewRollingVersion)                            // newRollingVersion
@@ -264,6 +307,8 @@ func TestCluster_fsm_deployment_utils(t *testing.T) {
 		// error replicaSetID
 		buf.Reset()
 		_ = binary.Write(buf, binary.LittleEndian, uint32(cmd.Kind))                                   // kind
+		_ = binary.Write(buf, binary.LittleEndian, uint64(len(cmd.Namespace)))                         // namespace len
+		_, _ = buf.Write([]byte(cmd.Namespace))                                                        // namespace
 		_ = binary.Write(buf, binary.LittleEndian, uint64(len(cmd.Name)))                              // name len
 		_, _ = buf.Write([]byte(cmd.Name))                                                             // name
 		_ = binary.Write(buf, binary.LittleEndian, cmd.NewRollingVersion)                              // newRollingVersion
@@ -282,6 +327,8 @@ func TestCluster_fsm_deployment_utils(t *testing.T) {
 		// error mustBeStarted
 		buf.Reset()
 		_ = binary.Write(buf, binary.LittleEndian, uint32(cmd.Kind))                                   // kind
+		_ = binary.Write(buf, binary.LittleEndian, uint64(len(cmd.Namespace)))                         // namespace len
+		_, _ = buf.Write([]byte(cmd.Namespace))                                                        // namespace
 		_ = binary.Write(buf, binary.LittleEndian, uint64(len(cmd.Name)))                              // name len
 		_, _ = buf.Write([]byte(cmd.Name))                                                             // name
 		_ = binary.Write(buf, binary.LittleEndian, cmd.NewRollingVersion)                              // newRollingVersion
@@ -301,6 +348,8 @@ func TestCluster_fsm_deployment_utils(t *testing.T) {
 		// No errors expected here
 		buf.Reset()
 		_ = binary.Write(buf, binary.LittleEndian, uint32(cmd.Kind))                                   // kind
+		_ = binary.Write(buf, binary.LittleEndian, uint64(len(cmd.Namespace)))                         // namespace len
+		_, _ = buf.Write([]byte(cmd.Namespace))                                                        // namespace
 		_ = binary.Write(buf, binary.LittleEndian, uint64(len(cmd.Name)))                              // name len
 		_, _ = buf.Write([]byte(cmd.Name))                                                             // name
 		_ = binary.Write(buf, binary.LittleEndian, cmd.NewRollingVersion)                              // newRollingVersion
@@ -340,8 +389,9 @@ func TestCluster_fsm_deployment_utils(t *testing.T) {
 			ReplicaSetID: "abcd1234",
 		}
 		cmd := deploymentState{
-			Kind: deploymentCommandGet,
-			Name: "redis",
+			Kind:      deploymentCommandGet,
+			Namespace: "default",
+			Name:      "redis",
 		}
 
 		buffer := new(bytes.Buffer)
@@ -379,6 +429,7 @@ func TestCluster_fsm_deployment_utils(t *testing.T) {
 		}
 		cmd := deploymentState{
 			Kind:               deploymentCommandSet,
+			Namespace:          "default",
 			Name:               "redis",
 			NewRollingVersion:  -1,
 			CurrentUsedVersion: 1,
@@ -420,6 +471,7 @@ func TestCluster_fsm_deployment_utils(t *testing.T) {
 		}
 		cmd := deploymentState{
 			Kind:               deploymentCommandGet,
+			Namespace:          "default",
 			Name:               "redis",
 			NewRollingVersion:  -1,
 			CurrentUsedVersion: 1,
@@ -461,6 +513,7 @@ func TestCluster_fsm_deployment_utils(t *testing.T) {
 		}
 		cmds := deploymentState{
 			Kind:               deploymentCommandSet,
+			Namespace:          "default",
 			Name:               "redis",
 			NewRollingVersion:  -1,
 			CurrentUsedVersion: 1,
@@ -481,8 +534,9 @@ func TestCluster_fsm_deployment_utils(t *testing.T) {
 		assert.Nil(err)
 
 		cmdg := deploymentState{
-			Kind: deploymentCommandGet,
-			Name: "redis",
+			Kind:      deploymentCommandGet,
+			Namespace: "default",
+			Name:      "redis",
 		}
 
 		bufferg := new(bytes.Buffer)
@@ -499,8 +553,9 @@ func TestCluster_fsm_deployment_utils(t *testing.T) {
 		assert.Nil(err)
 
 		cmdd := deploymentState{
-			Kind: deploymentCommandDelete,
-			Name: "redis",
+			Kind:      deploymentCommandDelete,
+			Namespace: "default",
+			Name:      "redis",
 		}
 
 		bufferd := new(bytes.Buffer)
@@ -519,7 +574,8 @@ func TestCluster_fsm_deployment_utils(t *testing.T) {
 
 	t.Run("unmarshal_success", func(t *testing.T) {
 		z := deploymentState{
-			Name: "redis",
+			Namespace: "default",
+			Name:      "redis",
 		}
 		r, err := json.Marshal(z)
 		assert.Nil(err)
