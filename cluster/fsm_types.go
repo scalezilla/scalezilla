@@ -56,6 +56,18 @@ type fsmState struct {
 
 	// memoryStoreLogsApplyCommandFunc is used as a dependency injection
 	memoryStoreLogsApplyCommandFunc func(log *rafty.LogEntry) ([]byte, error)
+
+	// memoryDeploymentSetFunc is used as a dependency injection
+	memoryDeploymentSetFunc func(log *rafty.LogEntry, config deploymentState) error
+
+	// memoryDeploymentSetFunc is used as a dependency injection
+	memoryDeploymentGetFunc func(key []byte) ([]byte, error)
+
+	// memoryDeploymentExistsFunc is used as a dependency injection
+	memoryDeploymentExistsFunc func(key []byte) bool
+
+	// memoryDeploymentGetAllFunc is used as a dependency injection
+	memoryDeploymentGetAllFunc func() (z []*deploymentState, err error)
 }
 
 // commandKind represent the command that will be applied to the state machine

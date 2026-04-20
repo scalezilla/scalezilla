@@ -1,8 +1,13 @@
 package cluster
 
 import (
+	"crypto/rand"
 	"fmt"
+	"maps"
 	"net/http"
+	"slices"
+	"strings"
+	"time"
 
 	"github.com/Lord-Y/rafty"
 	"github.com/gin-gonic/gin"
@@ -25,11 +30,94 @@ func (cc *Cluster) deploymentApply(c *gin.Context) {
 			return
 		}
 
+		var replicaSetID string
+		if cc.fsm.memoryDeploymentExistsFunc([]byte(spec.Deployment.Name)) {
+			data, err := cc.fsm.memoryDeploymentGetFunc([]byte(spec.Deployment.Name))
+			if err != nil && err != rafty.ErrKeyNotFound {
+				cc.logger.Error().Err(err).
+					Str("component", "deployment").
+					Str("namespace", spec.Deployment.Namespace).
+					Str("deploymentName", spec.Deployment.Name).
+					Msgf("fail to get deployment")
+				c.JSON(http.StatusInternalServerError, gin.H{"error": err})
+				return
+			}
+
+			state, err := deploymentDecodeCommand(data)
+			if err != nil {
+				cc.logger.Error().Err(err).
+					Str("component", "deployment").
+					Str("namespace", spec.Deployment.Namespace).
+					Str("deploymentName", spec.Deployment.Name).
+					Msgf("fail to decode retrieved deployment")
+				c.JSON(http.StatusInternalServerError, gin.H{"error": err})
+				return
+			}
+			if state.Content[state.CurrentUsedVersion].RawContent == req.HCLContent {
+				c.JSON(http.StatusOK, APIGenericResponse{Message: "already deployed"})
+				return
+			} else {
+				keys := slices.Sorted(maps.Keys(state.Content))
+				version := keys[0] + 1
+				replicaSetID = string(strings.ToLower(rand.Text())[:10])
+				dc := deploymentContent{
+					RawContent:   req.HCLContent,
+					Version:      version,
+					CreatedAt:    time.Now(),
+					ReplicaSetID: replicaSetID,
+				}
+				state := deploymentState{
+					Kind:              deploymentCommandSet,
+					Name:              spec.Deployment.Name,
+					NewRollingVersion: int64(version),
+					MustBeStarted:     true,
+				}
+				state.Content = make(map[uint64]deploymentContent)
+				state.Content[version] = dc
+				if err := cc.submitCommandDeploymentWrite(10*time.Second, state); err != nil {
+					cc.logger.Error().Err(err).
+						Str("component", "deployment").
+						Str("namespace", spec.Deployment.Namespace).
+						Str("deploymentName", spec.Deployment.Name).
+						Msgf("fail to submit deployment")
+					c.JSON(http.StatusInternalServerError, gin.H{"error": err})
+					return
+				}
+			}
+		} else {
+			replicaSetID = string(strings.ToLower(rand.Text())[:10])
+			dc := deploymentContent{
+				RawContent:   req.HCLContent,
+				Version:      1,
+				CreatedAt:    time.Now(),
+				ReplicaSetID: replicaSetID,
+			}
+			content := make(map[uint64]deploymentContent, 1)
+			content[dc.Version] = dc
+			state := deploymentState{
+				Kind:               deploymentCommandSet,
+				Name:               spec.Deployment.Name,
+				NewRollingVersion:  1,
+				CurrentUsedVersion: 1,
+				Content:            content,
+				MustBeStarted:      true,
+			}
+			if err := cc.submitCommandDeploymentWrite(10*time.Second, state); err != nil {
+				cc.logger.Error().Err(err).
+					Str("component", "deployment").
+					Str("namespace", spec.Deployment.Namespace).
+					Str("deploymentName", spec.Deployment.Name).
+					Msgf("fail to submit deployment")
+				c.JSON(http.StatusInternalServerError, gin.H{"error": err})
+				return
+			}
+		}
+
 		// this transformation is only temporary
 		// as we need to mature the deployment
 		cspec := cri.CreateContainerSpec{
 			Namespace:   spec.Deployment.Namespace,
-			ContainerID: fmt.Sprintf("%s-%s", spec.Deployment.Name, spec.Deployment.Pod.Container.Name),
+			ContainerID: fmt.Sprintf("%s-%s-%s", spec.Deployment.Name, replicaSetID, spec.Deployment.Pod.Container.Name),
 			Image: cri.ImageSpec{
 				Image: spec.Deployment.Pod.Container.Image,
 			},
