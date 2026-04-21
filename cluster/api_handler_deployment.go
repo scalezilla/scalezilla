@@ -141,7 +141,6 @@ func (cc *Cluster) deploymentApply(c *gin.Context) {
 		}
 
 		c.JSON(http.StatusOK, APIGenericResponse{Message: "deployment successful"})
-		fmt.Println("version", version)
 		// make version stable
 		state.NewRollingVersion = -1
 		if entry, ok := state.Content[version]; ok {
