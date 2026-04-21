@@ -47,3 +47,17 @@ func TestCluster_print_table_pods(t *testing.T) {
 		printTablePodsList(body)
 	})
 }
+
+func TestCluster_print_table_pods_delete(t *testing.T) {
+	t.Run("success", func(t *testing.T) {
+		body := []byte(`{"pods":["container \"nginx-test-62bxfrkfgk-nginx-container\" in namespace \"scalezilla\": not found","container \"redis-test-3chnfcmbcn-redis-container\" in namespace \"scalezilla\": not found"]}`)
+
+		printTablePodsDelete(body)
+	})
+
+	t.Run("error", func(t *testing.T) {
+		body := []byte(`[{"namespace":"default"`)
+
+		printTablePodsDelete(body)
+	})
+}

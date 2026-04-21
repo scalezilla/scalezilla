@@ -61,3 +61,15 @@ func printTablePodsList(body []byte) {
 	}
 	_ = w.Flush()
 }
+
+// printTablePodsDelete gives a table output
+func printTablePodsDelete(body []byte) {
+	var z APIPodsDeleteResponse
+	if err := json.Unmarshal(body, &z); err != nil {
+		fmt.Println(err)
+		return
+	}
+	for _, x := range z.Pods {
+		fmt.Println(x)
+	}
+}

@@ -3,6 +3,7 @@ package cluster
 import (
 	"fmt"
 	"net/http"
+	"strings"
 	"sync"
 
 	"github.com/Lord-Y/rafty"
@@ -89,7 +90,7 @@ func (cc *Cluster) podsDelete(c *gin.Context) {
 					Str("pod", pod).
 					Msg("Fail to delete pod")
 
-				result.Pods = append(result.Pods, fmt.Sprintf("failed to delete pod %s with error %s", pod, err.Error()))
+				result.Pods = append(result.Pods, strings.ReplaceAll(err.Error(), "scalezilla", req.Namespace))
 			} else {
 				result.Pods = append(result.Pods, fmt.Sprintf("pod %s deleted successfully", pod))
 			}

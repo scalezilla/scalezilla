@@ -205,7 +205,7 @@ func APICallsPodsDelete(config PodsDeleteHTTPConfig) error {
 	body, _ := io.ReadAll(resp.Body)
 
 	if resp.StatusCode == 200 {
-		fmt.Println(string(body))
+		printTablePodsDelete(body)
 		return nil
 	}
 
