@@ -54,6 +54,10 @@ func (c *Cluster) parseDeployment(data []byte) (cri.DeploymentSpec, error) {
 		spec.Deployment.Kind = "service"
 	}
 
+	if spec.Deployment.Replicas == 0 {
+		spec.Deployment.Replicas = 1
+	}
+
 	if spec.Deployment.Pod.Container.Resources == nil {
 		spec.Deployment.Pod.Container.Resources = &cri.ResourcesSpec{
 			CPU:    128,
