@@ -3,6 +3,7 @@ package cluster
 import (
 	"fmt"
 	"net"
+	"slices"
 	"strings"
 
 	"github.com/hashicorp/hcl/v2/gohcl"
@@ -80,6 +81,10 @@ func (c *Cluster) parseConfig() error {
 		return ErrClusterJoinInitialMembersEmpty
 	}
 
+	if config.Server != nil && config.Server.SchedulerConfig != nil && !slices.Contains([]string{"compact", "spread"}, config.Server.SchedulerConfig.BinpackMode) {
+		return ErrServerSchedulerConfigBinpackMode
+	}
+
 	if config.Client != nil && config.Client.ClusterJoin != nil && len(config.Client.ClusterJoin.InitialMembers) == 0 {
 		return ErrClusterJoinInitialMembersEmpty
 	}
@@ -109,6 +114,10 @@ func (c *Cluster) parseConfig() error {
 
 		if config.Server.ClusterJoin.RetryInterval == 0 {
 			config.Server.ClusterJoin.RetryInterval = defaultClusterJoinRetryInterval
+		}
+
+		if config.Server.SchedulerConfig == nil {
+			config.Server.SchedulerConfig = &SchedulerConfig{BinpackMode: "compact"}
 		}
 	}
 

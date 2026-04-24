@@ -175,6 +175,9 @@ func makeSizedCluster(cfg sizedClusterConfig) (cluster []*Cluster) {
 				SnapshotThreshold:     defaultSnapshotThreshold,
 				BootstrapExpectedSize: uint64(cfg.voterSize),
 			},
+			SchedulerConfig: &SchedulerConfig{
+				BinpackMode: "compact",
+			},
 		}
 		z.config.Server = server
 		cluster = append(cluster, z)

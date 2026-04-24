@@ -78,6 +78,9 @@ func (c *Cluster) buildDevConfig(config ClusterInitialConfig) {
 			SnapshotInterval:  30 * time.Second,
 			SnapshotThreshold: defaultSnapshotThreshold,
 		},
+		SchedulerConfig: &SchedulerConfig{
+			BinpackMode: "compact",
+		},
 	}
 	c.config.Server = server
 	c.members_http, c.members_grpc, c.members_raft = parseMembers(config.Members)

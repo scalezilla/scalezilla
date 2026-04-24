@@ -371,6 +371,9 @@ type Server struct {
 
 	// ClusterJoin holds requirements to join the cluster
 	ClusterJoin *ClusterJoin `hcl:"cluster_join,block"`
+
+	// SchedulerConfig holds requirements for scheduler management
+	SchedulerConfig *SchedulerConfig `hcl:"scheduler_config,block"`
 }
 
 // Server holds the requirements to start current node
@@ -433,6 +436,14 @@ type ClusterJoin struct {
 	// try to contact the initial members.
 	// Default to 15s
 	RetryInterval time.Duration `hcl:"retry_interval,optional"`
+}
+
+// SchedulerConfig holds requirements for the server block
+type SchedulerConfig struct {
+	// BinpackMode is the mode use by servers to determine how to distribute pods
+	// accross nodes.
+	// Default to compact, otherwise spread
+	BinpackMode string `hcl:"binpack_mode,optional"`
 }
 
 // nodeMap is a map of all nodes in the cluster
