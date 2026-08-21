@@ -54,6 +54,10 @@ func (c *Cluster) parseDeployment(data []byte) (cri.DeploymentSpec, error) {
 		spec.Deployment.Kind = "service"
 	}
 
+	if spec.Deployment.MaxSurge == 0 {
+		spec.Deployment.MaxSurge = 25
+	}
+
 	if spec.Deployment.Replicas == 0 {
 		spec.Deployment.Replicas = 1
 	}
