@@ -49,6 +49,8 @@ type DeploymentConfigSpec struct {
 	Kind      string            `hcl:"kind,optional"`
 	Namespace string            `hcl:"namespace,optional"`
 	Metadata  map[string]string `hcl:"metadata,optional"`
+	MaxSurge  uint64            `hcl:"max_surge,optional"`
+	Replicas  uint64            `hcl:"replicas,optional"`
 	Pod       DeploymentPodSpec `hcl:"pod,block"`
 }
 
